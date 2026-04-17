@@ -20,9 +20,16 @@ Return STRICT JSON:
   "strengths": ["point1", "point2"],
   "improvements": ["point1", "point2"],
   "suggested_answer": "Provide a better version of the answer in 3-4 lines"
+  "answer_type": "correct | partial | wrong | dont_know | unclear"
 }}
 
 Rules:
+- If answer is unrelated → answer_type = wrong
+- If user misunderstood question → answer_type = unclear
+- If user says "I don't know" → answer_type = dont_know
+- If partially correct → answer_type = partial
+- If good → answer_type = correct
+- Be strict in classification
 - Be concise
 - Do not add extra text outside JSON
 """
