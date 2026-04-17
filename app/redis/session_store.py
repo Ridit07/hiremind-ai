@@ -6,7 +6,12 @@ SESSION_PREFIX = "session:"
 
 def save_session(interview_id, session_dict):
     key = SESSION_PREFIX + interview_id
-    redis_client.set(key, json.dumps(session_dict))
+
+    redis_client.set(
+        key,
+        json.dumps(session_dict),
+        ex=3600  
+    )
 
 
 def get_session(interview_id):
@@ -17,3 +22,7 @@ def get_session(interview_id):
         return None
 
     return json.loads(data)
+
+def delete_session(interview_id):
+    key = SESSION_PREFIX + interview_id
+    redis_client.delete(key)
