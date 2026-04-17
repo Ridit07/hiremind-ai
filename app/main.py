@@ -29,3 +29,23 @@ def chat(data: dict):
     response = service.process_message(session, user_input)
 
     return response
+
+
+@app.get("/check-activity")
+def check_activity(interview_id: str):
+    session = sessions.get(interview_id)
+
+    if not session:
+        return {}
+
+    result = service.check_inactivity(session)
+
+    if result:
+        return {
+            "role": "assistant",
+            "type": result["type"],
+            "content": result["content"],
+            "next_question": result.get("next_question")
+        }
+
+    return {}

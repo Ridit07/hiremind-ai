@@ -1,3 +1,5 @@
+import time
+
 class InterviewSession:
     def __init__(self, interview_id, role, company, interview_type, skills, level):
         self.interview_id = interview_id
@@ -13,3 +15,5 @@ class InterviewSession:
         self.topics_covered = set()
         self.subtopics_covered = set()
         self.asked_questions = set()
+        self.last_activity_time = time.time()
+        self.silence_count = 0

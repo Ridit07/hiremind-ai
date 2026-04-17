@@ -2,11 +2,15 @@ from app.core.llm import chat_completion
 from app.prompts.system_prompt import get_system_prompt
 from app.prompts.evaluation_prompt import get_evaluation_prompt
 from app.utils.helpers import extract_topic, safe_json_parse
+import time
+
 
 
 class ConversationService:
 
     def process_message(self, session, user_input):
+        session.last_activity_time = time.time()
+        session.silence_count = 0
 
         # First message → start interview
         if not session.messages:
@@ -254,3 +258,61 @@ class ConversationService:
         ], max_tokens=120)
 
         return response
+    
+
+
+    def _generate_hint(self, question):
+        prompt = f"""
+    You are an interviewer.
+
+    Question: {question}
+
+    Give a VERY SHORT hint (1 line max).
+    Do not reveal the full answer.
+    """
+
+        return chat_completion([
+            {"role": "system", "content": "You are a helpful interviewer."},
+            {"role": "user", "content": prompt}
+        ], max_tokens=50)
+
+
+    def check_inactivity(self, session):
+        now = time.time()
+        diff = now - session.last_activity_time
+
+        question = session.last_question
+
+        # 🟡 Stage 1: Thinking
+        if diff > 15 and session.silence_count == 0:
+            session.silence_count += 1
+            return {
+                "type": "nudge",
+                "content": "Take your time."
+            }
+
+        # 🟠 Stage 2: Give ACTUAL hint
+        elif diff > 30 and session.silence_count == 1:
+            session.silence_count += 1
+
+            hint = self._generate_hint(question)
+
+            return {
+                "type": "hint",
+                "content": hint
+            }
+
+        # 🔴 Stage 3: Skip with NEW question
+        elif diff > 60:
+            session.silence_count = 0
+
+            next_question = self._generate_question(session)
+            session.last_question = next_question
+
+            return {
+                "type": "skip",
+                "content": "Let's move to another question.",
+                "next_question": next_question
+            }
+
+        return None
