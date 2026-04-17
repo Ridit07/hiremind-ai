@@ -9,3 +9,7 @@ class InterviewSession:
 
         self.messages = []
         self.last_question = None
+        self.question_attempts = {}
+        self.topics_covered = set()
+        self.subtopics_covered = set()
+        self.asked_questions = set()

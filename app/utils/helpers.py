@@ -1,11 +1,13 @@
 import json
+from app.core.llm import chat_completion
 
 
-def safe_json_parse(response: str, default=None):
-    try:
-        return json.loads(response)
-    except Exception:
-        return default or {}
+
+# def safe_json_parse(response: str, default=None):
+#     try:
+#         return json.loads(response)
+#     except Exception:
+#         return default or {}
 
 
 def calculate_average_score(history):
@@ -38,10 +40,29 @@ def format_history_for_prompt(history):
 
     return "\n\n".join(formatted)
 
-    import json
 
 def safe_json_parse(response):
     try:
         return json.loads(response)
     except:
         return {}
+    
+def extract_topic(question):
+    prompt = f"""
+Classify this interview question.
+
+Question: {question}
+
+Return JSON:
+{{
+  "topic": "DSA | Python | System Design | DBMS | OS",
+  "subtopic": "specific concept like Linked List, HashMap, Tuple"
+}}
+"""
+
+    response = chat_completion([
+        {"role": "system", "content": "You are a classifier."},
+        {"role": "user", "content": prompt}
+    ], temperature=0)
+
+    return safe_json_parse(response)

@@ -1,7 +1,7 @@
 from app.core.llm import chat_completion
 from app.prompts.system_prompt import get_system_prompt
 from app.prompts.evaluation_prompt import get_evaluation_prompt
-from app.utils.helpers import safe_json_parse
+from app.utils.helpers import extract_topic, safe_json_parse
 
 
 class ConversationService:
@@ -20,6 +20,15 @@ class ConversationService:
             }
 
             session.messages.append(ai_msg)
+
+
+                    # 🧠 Track topic
+            topic_data = extract_topic(question)
+            if topic_data.get("topic"):
+                session.topics_covered.add(topic_data["topic"])
+            if topic_data.get("subtopic"):
+                session.subtopics_covered.add(topic_data["subtopic"])
+
             return ai_msg
         
         session.messages.append({
@@ -31,14 +40,39 @@ class ConversationService:
 
         # Evaluate answer
         evaluation = self._evaluate(session.last_question, user_input)
+
+        question = session.last_question
+
+        # initialize
+        if question not in session.question_attempts:
+            session.question_attempts[question] = 0
+
+        # increment if wrong
+        if evaluation.get("answer_type") in ["wrong", "unclear", "dont_know"]:
+            session.question_attempts[question] += 1
+        
+        attempts = session.question_attempts[question]
+
         
         # Feedback
-        feedback = self._generate_feedback(session.last_question, user_input, evaluation)
+        feedback = self._generate_feedback(question, user_input, evaluation)
 
         # Generate next question
-        next_question = self._generate_next_question(session, evaluation)
+        if attempts >= 2:
+            next_question = self._generate_question(session)
+            feedback = "Let's move to a different topic."
+
+        else:
+            next_question = self._generate_next_question(session, evaluation)
 
         session.last_question = next_question
+
+        topic_data = extract_topic(next_question)
+        if topic_data.get("topic"):
+            session.topics_covered.add(topic_data["topic"])
+        if topic_data.get("subtopic"):
+            session.subtopics_covered.add(topic_data["subtopic"])
+
 
         ai_msg = {
             "role": "assistant",
@@ -62,12 +96,25 @@ class ConversationService:
         return ai_msg
 
     def _generate_question(self, session):
-        messages = [
-            {"role": "system", "content": get_system_prompt(session)},
-            {"role": "user", "content": "Ask the next interview question."}
-        ]
+        covered_topics = ", ".join(session.topics_covered) or "None"
+        covered_subtopics = ", ".join(session.subtopics_covered) or "None"
 
-        return chat_completion(messages)
+        prompt = f"""
+        Ask an interview question.
+
+        Constraints:
+        - Avoid topics already covered: {covered_topics}
+        - Avoid subtopics already covered: {covered_subtopics}
+        - Keep it relevant to role and skills
+        - Keep it concise and realistic
+        """
+
+        question = chat_completion([
+            {"role": "system", "content": get_system_prompt(session)},
+            {"role": "user", "content": prompt}
+        ])
+
+        return question
 
     def _evaluate(self, question, answer):
         messages = [
@@ -117,34 +164,89 @@ class ConversationService:
 
             return response
     
-    
     def _generate_next_question(self, session, evaluation):
+        question = session.last_question
+        attempts = session.question_attempts.get(question, 0)
         answer_type = evaluation.get("answer_type")
 
-        prompt = f"""
-        You are an interviewer.
+        covered_topics = ", ".join(session.topics_covered) or "None"
+        covered_subtopics = ", ".join(session.subtopics_covered) or "None"
 
-        Previous Question: {session.last_question}
-        Candidate Score: {evaluation.get("overall_score")}
-        Answer Type: {answer_type}
+        # 🚨 CASE 1: Skip after 2 failed attempts
+        if attempts >= 2:
+            prompt = f"""
+    You are an interviewer.
 
-        Rules:
+    Covered Topics: {covered_topics}
+    Covered Subtopics: {covered_subtopics}
 
-        - If answer_type = wrong or unclear:
-            → Repeat the SAME question in simpler words
+    Previous Question: {question}
+    Candidate failed twice.
 
-        - If answer_type = dont_know:
-            → Give hint + ask same question again
+    Instructions:
+    - Move to a COMPLETELY NEW topic
+    - Do NOT repeat or rephrase the previous question
+    - Avoid already covered subtopics
+    - Ask a fresh, relevant interview question
+    """
 
-        - If answer_type = partial:
-            → Ask follow-up on SAME topic
+        # 🚨 CASE 2: Candidate doesn't know
+        elif answer_type == "dont_know":
+            prompt = f"""
+    You are an interviewer.
 
-        - If answer_type = correct:
-            → Move to next concept
+    Previous Question: {question}
 
-        Keep it concise and natural.
+    Instructions:
+    - Candidate does not know the answer
+    - Give a VERY SMALL hint (one short line)
+    - Then ask a simpler related question
+    - Do NOT repeat the exact same question
+    - Keep it natural and conversational
+    """
 
-        """
+        # 🚨 CASE 3: Wrong / unclear
+        elif answer_type in ["wrong", "unclear"]:
+            prompt = f"""
+    You are an interviewer.
+
+    Previous Question: {question}
+
+    Instructions:
+    - Candidate misunderstood the question
+    - Rephrase the SAME question in simpler words
+    - Keep it concise and clear
+    """
+
+        # 🚨 CASE 4: Partial answer
+        elif answer_type == "partial":
+            prompt = f"""
+    You are an interviewer.
+
+    Previous Question: {question}
+
+    Instructions:
+    - Candidate is partially correct
+    - Ask a follow-up question on the SAME topic
+    - Go slightly deeper
+    """
+
+        # 🚨 CASE 5: Correct answer
+        else:  # correct
+            prompt = f"""
+    You are an interviewer.
+
+    Covered Topics: {covered_topics}
+    Covered Subtopics: {covered_subtopics}
+
+    Previous Question: {question}
+
+    Instructions:
+    - Candidate answered correctly
+    - Move to a NEW concept or subtopic
+    - Avoid repeating covered subtopics
+    - Keep question realistic and concise
+    """
 
         response = chat_completion([
             {"role": "system", "content": get_system_prompt(session)},
