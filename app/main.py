@@ -1,6 +1,9 @@
 from fastapi import FastAPI
 from app.models.session import InterviewSession
 from app.services.conversation_service import ConversationService
+from app.redis.session_store import save_session, get_session
+import time
+
 
 app = FastAPI()
 service = ConversationService()
@@ -12,8 +15,13 @@ sessions = {}
 def chat(data: dict):
     interview_id = data["interview_id"]
 
-    if interview_id not in sessions:
-        sessions[interview_id] = InterviewSession(
+    session_data = get_session(interview_id)
+
+
+    if session_data:
+        session = InterviewSession.from_dict(session_data)
+    else:
+        session = InterviewSession(
             interview_id=interview_id,
             role=data["role"],
             company=data["company"],
@@ -22,25 +30,35 @@ def chat(data: dict):
             level=data["level"]
         )
 
-    session = sessions[interview_id]
+    # session = sessions[interview_id]
+    session.last_activity_time = time.time()
+    session.silence_count = 0
+
 
     user_input = data["message"]
 
     response = service.process_message(session, user_input)
+
+    save_session(interview_id, session.to_dict())
+
 
     return response
 
 
 @app.get("/check-activity")
 def check_activity(interview_id: str):
-    session = sessions.get(interview_id)
+    session_data = get_session(interview_id)
 
-    if not session:
+
+    if not session_data:
         return {}
+
+    session = InterviewSession.from_dict(session_data)
 
     result = service.check_inactivity(session)
 
     if result:
+        save_session(interview_id, session.to_dict())
         return {
             "role": "assistant",
             "type": result["type"],
