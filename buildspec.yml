@@ -1,0 +1,23 @@
+version: 0.2
+
+phases:
+  pre_build:
+    commands:
+      - echo Logging in to Amazon ECR...
+      - aws ecr get-login-password --region ap-south-1 | docker login --username AWS --password-stdin 333481906073.dkr.ecr.ap-south-1.amazonaws.com
+
+  build:
+    commands:
+      - echo Build started
+      - docker build -t hiremind-ai .
+      - docker tag hiremind-ai:latest 333481906073.dkr.ecr.ap-south-1.amazonaws.com/hiremind-ai:latest
+
+  post_build:
+    commands:
+      - echo Pushing image...
+      - docker push 333481906073.dkr.ecr.ap-south-1.amazonaws.com/hiremind-ai:latest
+      - printf '[{"name":"Main","imageUri":"%s"}]' 333481906073.dkr.ecr.ap-south-1.amazonaws.com/hiremind-ai:latest > imagedefinitions.json
+
+artifacts:
+  files:
+    - imagedefinitions.json
