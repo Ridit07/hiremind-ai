@@ -93,3 +93,11 @@ def check_activity(interview_id: str):
 def end_session(interview_id: str):
     delete_session(interview_id)
     return {"message": "Session deleted"}
+
+@app.get("/")
+def home():
+    return {"message": "App is running 🚀"}
+
+@app.get("/health")
+def health():
+    return {"status": "healthy"}
