@@ -67,14 +67,7 @@ Return JSON:
 
     return safe_json_parse(response)
 
-# def extract_coding_requirement(skills):
-#     for skill in skills:
-#         if skill.startswith("coding_"):
-#             try:
-#                 return int(skill.split("_")[1])
-#             except:
-#                 return 1
-#     return 0
+
 
 
 def apply_coding_config(session, coding_config):
