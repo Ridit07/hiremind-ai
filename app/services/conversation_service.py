@@ -12,8 +12,18 @@ class ConversationService:
         session.last_activity_time = time.time()
         session.silence_count = 0
 
-        # First message → start interview
+        #  1. If waiting for code → treat EVERYTHING as clarification
+        if session.current_mode == "waiting_code":
+            return self._handle_clarification(session, user_input)
+
+
+        # 🔥 2. First message → start interview
         if not session.messages:
+
+            # 👉 Decide: coding or normal
+            if session.coding_enabled and session.coding_asked < session.coding_required:
+                return self._start_coding_question(session)
+
             question = self._generate_question(session)
             session.last_question = question
 
@@ -25,8 +35,7 @@ class ConversationService:
 
             session.messages.append(ai_msg)
 
-
-                    # 🧠 Track topic
+            # 🧠 Track topic
             topic_data = extract_topic(question)
             if topic_data.get("topic"):
                 session.topics_covered.add(topic_data["topic"])
@@ -34,11 +43,13 @@ class ConversationService:
                 session.subtopics_covered.add(topic_data["subtopic"])
 
             return ai_msg
-        
+
+
+        # 👇 Normal flow continues
         session.messages.append({
-        "role": "user",
-        "type": "text",
-        "content": user_input
+            "role": "user",
+            "type": "text",
+            "content": user_input
         })
 
 
@@ -47,27 +58,30 @@ class ConversationService:
 
         question = session.last_question
 
-        # initialize
         if question not in session.question_attempts:
             session.question_attempts[question] = 0
 
-        # increment if wrong
         if evaluation.get("answer_type") in ["wrong", "unclear", "dont_know"]:
             session.question_attempts[question] += 1
-        
+
         attempts = session.question_attempts[question]
 
-        
-        # Feedback
         feedback = self._generate_feedback(question, user_input, evaluation)
 
-        # Generate next question
+
+        # 🔥 3. Decide next question (coding vs normal)
         if attempts >= 2:
-            next_question = self._generate_question(session)
             feedback = "Let's move to a different topic."
 
+            if session.coding_enabled and session.coding_asked < session.coding_required:
+                return self._start_coding_question(session)
+
+            next_question = self._generate_question(session)
+
         else:
+            # normal follow-up logic
             next_question = self._generate_next_question(session, evaluation)
+
 
         session.last_question = next_question
 
@@ -88,12 +102,6 @@ class ConversationService:
                 "next_question": next_question
             }
         }
-
-        # session.messages.append({
-        #     "role": "user",
-        #     "type": "text",
-        #     "content": user_input
-        # })
 
         session.messages.append(ai_msg)
 
@@ -316,3 +324,129 @@ class ConversationService:
             }
 
         return None
+    
+    def _start_coding_question(self, session):
+
+        # 🎯 Pick difficulty dynamically
+        difficulty = None
+        if session.coding_difficulty:
+            idx = min(session.coding_asked, len(session.coding_difficulty) - 1)
+            difficulty = session.coding_difficulty[idx]
+
+        topics = ", ".join(session.coding_topics) or "any relevant topic"
+
+        prompt = f"""
+    You are a FAANG-level interviewer.
+
+    Role: {session.role}
+    Level: {session.level}
+
+    Ask a coding problem.
+
+    Constraints:
+    - Topic preference: {topics}
+    - Difficulty: {difficulty or "choose appropriately"}
+    - Language preference: {session.preferred_language or "any"}
+
+    Rules:
+    - Do NOT give solution
+    - Include constraints
+    - Keep problem realistic
+    - Avoid repeating previous problems
+    """
+
+        question = chat_completion([
+            {"role": "system", "content": get_system_prompt(session)},
+            {"role": "user", "content": prompt}
+        ])
+
+        session.current_mode = "waiting_code"
+        session.current_coding_question = question
+        session.coding_asked += 1
+
+        return {
+            "role": "assistant",
+            "type": "coding_question",
+            "content": question,
+            "meta": {
+                "difficulty": difficulty,
+                "topics": session.coding_topics
+            }
+        }
+    
+
+    def _handle_clarification(self, session, user_input):
+        prompt = f"""
+    You are a professional technical interviewer.
+
+    Coding Question:
+    {session.current_coding_question}
+
+    Candidate Question:
+    {user_input}
+
+    Rules:
+    - Answer ONLY clarification questions
+    - NEVER reveal full algorithm
+    - NEVER provide code
+    - NEVER explicitly state the optimal approach
+    - Small hints are allowed
+    - Keep response under 2 lines
+    - Maintain interviewer tone
+    """
+
+        response = chat_completion([
+            {"role": "system", "content": "You are a strict interviewer."},
+            {"role": "user", "content": prompt}
+        ], max_tokens=80)
+
+        return {
+            "role": "assistant",
+            "type": "clarification",
+            "content": response
+        }
+    
+    def evaluate_code(self, session, data):
+        prompt = f"""
+    You are a senior engineer evaluating code.
+
+    Problem:
+    {session.current_coding_question}
+
+    Code:
+    {data['code']}
+
+    Language: {data['language']}
+
+    Candidate Explanation:
+    Approach: {data.get('approach')}
+    Time Complexity: {data.get('time_complexity')}
+    Space Complexity: {data.get('space_complexity')}
+
+    Evaluate STRICTLY.
+
+    Return JSON:
+    {{
+    "correctness": number (0-10),
+    "optimization": number (0-10),
+    "code_quality": number (0-10),
+    "complexity_accuracy": number (0-10),
+    "overall_score": number (0-10),
+    "issues": ["..."],
+    "improvements": ["..."],
+    "verdict": "correct | partially_correct | wrong"
+    }}
+
+    Rules:
+    - DO NOT rewrite full solution
+    - DO NOT provide full optimized code
+    - Point issues clearly
+    - Be strict
+    """
+
+        response = chat_completion([
+            {"role": "system", "content": "You are a strict code reviewer."},
+            {"role": "user", "content": prompt}
+        ], temperature=0.2)
+
+        return safe_json_parse(response)
