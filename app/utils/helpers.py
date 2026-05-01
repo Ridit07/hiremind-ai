@@ -3,11 +3,6 @@ from app.core.llm import chat_completion
 
 
 
-# def safe_json_parse(response: str, default=None):
-#     try:
-#         return json.loads(response)
-#     except Exception:
-#         return default or {}
 
 
 def calculate_average_score(history):
