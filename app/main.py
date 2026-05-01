@@ -1,9 +1,11 @@
 from fastapi import FastAPI
+from app.models import session
 from app.models.session import InterviewSession
 from app.services.conversation_service import ConversationService
 from app.redis.session_store import delete_session, save_session, get_session
 from app.redis.lock import acquire_lock, release_lock
 import time
+from app.utils.helpers import apply_coding_config
 
 
 app = FastAPI()
@@ -37,6 +39,7 @@ def chat(data: dict):
                 skills=data["skills"],
                 level=data["level"]
             )
+        apply_coding_config(session, data.get("coding"))
 
         # session = sessions[interview_id]
         session.last_activity_time = time.time()
@@ -87,6 +90,44 @@ def check_activity(interview_id: str):
         return {}
     finally:
         release_lock(lock)
+
+
+
+@app.post("/submit-code")
+def submit_code(data: dict):
+
+    interview_id = data["interview_id"]
+
+    session_data = get_session(interview_id)
+
+    if not session_data:
+        return {"error": "Session not found"}
+
+    session = InterviewSession.from_dict(session_data)
+
+    evaluation = service.evaluate_code(session, data)
+
+    # coding round finished
+    session.current_mode = "normal"
+    session.current_coding_question = None
+
+    # 🔥 Continue flow
+    if (
+        session.coding_enabled and
+        session.coding_asked < session.coding_required
+    ):
+        next_question = service._start_coding_question(session)
+
+    else:
+        next_question = service._generate_question(session)
+
+    save_session(interview_id, session.to_dict())
+
+    return {
+        "evaluation": evaluation,
+        "next_question": next_question
+    }
+
 
 
 @app.delete("/end-session")

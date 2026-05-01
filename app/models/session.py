@@ -15,9 +15,21 @@ class InterviewSession:
         self.topics_covered = set()
         self.subtopics_covered = set()
         self.last_activity_time = time.time()
-        self.silence_count = 0
 
-    # 🔥 Serialize for Redis
+        self.silence_count = 0
+        # 🔥 Coding config
+        self.coding_enabled = False
+        self.coding_required = 0
+        self.coding_asked = 0
+        self.coding_topics = []
+        self.coding_difficulty = []
+        self.preferred_language = None
+        # runtime
+        self.current_mode = "normal"   # normal | coding | waiting_code
+        self.current_coding_question = None
+
+
+    #  Serialize for Redis
     def to_dict(self):
         return {
             "interview_id": self.interview_id,
@@ -32,10 +44,20 @@ class InterviewSession:
             "topics_covered": list(self.topics_covered),
             "subtopics_covered": list(self.subtopics_covered),
             "last_activity_time": self.last_activity_time,
-            "silence_count": self.silence_count
+            "silence_count": self.silence_count,
+
+            "coding_enabled": self.coding_enabled,
+            "coding_required": self.coding_required,
+            "coding_asked": self.coding_asked,
+            "coding_topics": self.coding_topics,
+            "coding_difficulty": self.coding_difficulty,
+            "preferred_language": self.preferred_language,
+            "current_mode": self.current_mode,
+            "current_coding_question": self.current_coding_question
+
         }
 
-    # 🔥 Deserialize from Redis
+    #  Deserialize from Redis
     @classmethod
     def from_dict(cls, data):
         obj = cls(
@@ -56,5 +78,16 @@ class InterviewSession:
 
         obj.last_activity_time = data.get("last_activity_time", time.time())
         obj.silence_count = data.get("silence_count", 0)
+
+
+        obj.coding_enabled = data.get("coding_enabled", False)
+        obj.coding_required = data.get("coding_required", 0)
+        obj.coding_asked = data.get("coding_asked", 0)
+        obj.coding_topics = data.get("coding_topics", [])
+        obj.coding_difficulty = data.get("coding_difficulty", [])
+        obj.preferred_language = data.get("preferred_language")
+        obj.current_mode = data.get("current_mode", "normal")
+        obj.current_coding_question = data.get("current_coding_question")
+
 
         return obj

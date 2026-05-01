@@ -66,3 +66,26 @@ Return JSON:
     ], temperature=0)
 
     return safe_json_parse(response)
+
+
+
+
+def apply_coding_config(session, coding_config):
+    if not coding_config:
+        return
+
+    session.coding_enabled = coding_config.get("enabled", False)
+
+    if not session.coding_enabled:
+        return
+
+    session.coding_required = coding_config.get("num_questions", 1)
+
+    # normalize difficulty → always list
+    difficulty = coding_config.get("difficulty", [])
+    if isinstance(difficulty, str):
+        difficulty = [difficulty]
+
+    session.coding_difficulty = difficulty
+    session.coding_topics = coding_config.get("topics", [])
+    session.preferred_language = coding_config.get("language")
