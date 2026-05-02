@@ -54,7 +54,7 @@ consumer_frontend/
 
 ```bash
 # 1. Navigate to the project
-cd /Users/ridit/Documents/hiremind-ai/hiremind-ai/consumer_frontend
+cd consumer_frontend
 
 # 2. Run the development server
 npm run dev
