@@ -77,7 +77,7 @@
 
 ```bash
 # Navigate to project
-cd /Users/ridit/Documents/hiremind-ai/hiremind-ai/consumer_frontend
+cd consumer_frontend
 
 # Install dependencies (already done)
 npm install
