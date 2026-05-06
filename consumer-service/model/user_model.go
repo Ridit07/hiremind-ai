@@ -1,80 +1,94 @@
 package model
 
 import (
+	errorv2 "consumer-service/errors"
 	"context"
+	"errors"
+	"strings"
+	"time"
 
-	"consumer-service/db"
-
-	"github.com/jackc/pgx/v5"
+	"gorm.io/gorm"
 )
 
 type User struct {
-	Email        string
-	PasswordHash string
-	UserType     string
-	PhoneNumber  string
+	UserID       string     `gorm:"column:user_id;type:uuid;default:gen_random_uuid();primaryKey"`
+	Email        string     `gorm:"column:email; uniqueIndex:idx_users_email;not null"`
+	PasswordHash string     `gorm:"column:password_hash"`
+	UserType     UserType   `gorm:"column:user_type"`
+	PhoneNumber  string     `gorm:"column:phone_number"`
+	UserStatus   UserStatus `gorm:"column:user_status"`
+	CreatedAt    time.Time  `gorm:"column:created_at"`
+	UpdatedAt    time.Time  `gorm:"column:updated_at"`
 }
 
-func CreateUser(
-	ctx context.Context,
-	tx pgx.Tx,
-	user User,
-) error {
+type UserType string
 
-	query := `
-	INSERT INTO users (
-		email,
-		password_hash,
-		user_type,
-		phone_number
-	)
-	VALUES ($1, $2, $3, $4)
-	`
+const (
+	UserTypeCandidate UserType = "candidate"
+	UserTypeHR        UserType = "hr"
+)
 
-	_, err := tx.Exec(
-		ctx,
-		query,
-		user.Email,
-		user.PasswordHash,
-		user.UserType,
-		user.PhoneNumber,
-	)
+type UserStatus string
 
-	return err
+const (
+	UserStatusActive    UserStatus = "active"
+	UserStatusNotActive UserStatus = "not_active"
+)
+
+func (User) TableName() string {
+	return "users"
 }
 
-func GetUserByEmail(
-	ctx context.Context,
-	email string,
-) (*User, error) {
+func CreateUser(ctx context.Context, db *gorm.DB, user *User) error {
 
-	query := `
-	SELECT
-		email,
-		password_hash,
-		user_type,
-		phone_number
-	FROM users
-	WHERE email = $1
-	`
+	err := db.WithContext(ctx).Create(user).Error
 
-	row := db.ReadConnection().QueryRow(
-		ctx,
-		query,
-		email,
-	)
+	if err != nil {
+		return errorv2.Database.Wrap(err, "failed to create user")
+	}
+
+	return nil
+}
+
+func GetUserDetails(ctx context.Context, db *gorm.DB, getUsers User) (*User, error) {
 
 	var user User
 
-	err := row.Scan(
-		&user.Email,
-		&user.PasswordHash,
-		&user.UserType,
-		&user.PhoneNumber,
-	)
+	query := db.WithContext(ctx).Model(&User{})
+
+	validQueery := false
+
+	if strings.TrimSpace(getUsers.Email) != "" {
+		query = query.Where("email = ?", getUsers.Email)
+		validQueery = true
+	}
+
+	if strings.TrimSpace(getUsers.PhoneNumber) != "" {
+		query = query.Where("phone_number = ?", getUsers.PhoneNumber)
+	}
+
+	if strings.TrimSpace(string(getUsers.UserType)) != "" {
+		query = query.Where("user_type = ?", getUsers.UserType)
+	}
+
+	if !validQueery {
+		return nil, errorv2.Database.New(
+			"at least one indexed filter is required",
+		)
+	}
+
+	err := query.First(&user).Error
 
 	if err != nil {
-		return nil, err
+
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
+
+		return nil, errorv2.Database.Wrap(
+			err,
+			"failed to get user",
+		)
 	}
 
 	return &user, nil

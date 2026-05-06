@@ -3,29 +3,23 @@ package main
 import (
 	"log"
 	"net"
-	"os"
 
+	"consumer-service/config"
 	"consumer-service/db"
-	grpcserver "consumer-service/transport/grpc"
+	authServer "consumer-service/transport_grpc/auth"
 
-	pb "github.com/Ridit07/hiremind-proto-contracts/generated"
+	pb "github.com/Ridit07/hiremind-proto-contracts/generated/auth"
 
 	"google.golang.org/grpc"
 )
 
 func main() {
 
-	readDBURL := os.Getenv(
-		"READ_DATABASE_URL",
-	)
-
-	writeDBURL := os.Getenv(
-		"WRITE_DATABASE_URL",
-	)
+	config.LoadConfig()
 
 	err := db.InitDB(
-		readDBURL,
-		writeDBURL,
+		config.AppConfig.DBReadURL,
+		config.AppConfig.DBWriteURL,
 	)
 
 	if err != nil {
@@ -45,7 +39,7 @@ func main() {
 
 	pb.RegisterAuthServiceServer(
 		grpcServer,
-		&grpcserver.AuthServer{},
+		&authServer.AuthServer{},
 	)
 
 	log.Println(

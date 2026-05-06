@@ -2,55 +2,53 @@ package authService
 
 import (
 	"context"
-	"errors"
+	"strings"
+	"time"
 
 	"consumer-service/db"
+	"consumer-service/errors"
 	"consumer-service/model"
 )
 
-func Signup(
-	ctx context.Context,
-	email string,
-	password string,
-	userType string,
-	phone string,
-) error {
+func Signup(ctx context.Context, req SignupRequest) error {
 
-	existingUser, _ := model.GetUserByEmail(
-		ctx,
-		email,
-	)
+	if strings.TrimSpace(req.Email) == "" {
+		return errors.BadRequest.New("email is required")
+	}
+
+	if req.UserType == "" {
+		return errors.BadRequest.New("user_type is required")
+	}
+
+	existingUser, err := model.GetUserDetails(ctx, db.ReadConnection(), model.User{
+		Email: req.Email,
+	})
+
+	if err != nil {
+		return err
+	}
 
 	if existingUser != nil {
-		return errors.New(
-			"user already exists",
-		)
+		return errors.BadRequest.New("user already exists")
 	}
 
-	hashedPassword, err := HashPassword(
-		password,
-	)
+	hashedPassword, err := HashPassword(req.Password)
 
 	if err != nil {
 		return err
 	}
-
-	tx, err := db.WriteConnection().Begin(ctx)
-
-	if err != nil {
-		return err
-	}
-
-	defer tx.Rollback(ctx)
 
 	err = model.CreateUser(
 		ctx,
-		tx,
-		model.User{
-			Email:        email,
+		db.WriteConnection(),
+		&model.User{
+			Email:        req.Email,
 			PasswordHash: hashedPassword,
-			UserType:     userType,
-			PhoneNumber:  phone,
+			UserType:     model.UserType(req.UserType),
+			PhoneNumber:  req.PhoneNumber,
+			UserStatus:   model.UserStatusActive,
+			CreatedAt:    time.Now(),
+			UpdatedAt:    time.Now(),
 		},
 	)
 
@@ -58,5 +56,5 @@ func Signup(
 		return err
 	}
 
-	return tx.Commit(ctx)
+	return nil
 }

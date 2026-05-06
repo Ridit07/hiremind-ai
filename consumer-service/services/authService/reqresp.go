@@ -1,10 +1,17 @@
 package authService
 
+type UserType string
+
+const (
+	UserTypeCandidate UserType = "candidate"
+	UserTypeHR        UserType = "hr"
+)
+
 type SignupRequest struct {
-	Email       string `json:"email"`
-	Password    string `json:"password"`
-	UserType    string `json:"user_type"`
-	PhoneNumber string `json:"phone_number"`
+	Email       string   `json:"email"`
+	Password    string   `json:"password"`
+	UserType    UserType `json:"user_type"`
+	PhoneNumber string   `json:"phone_number"`
 }
 
 type SignupResponse struct {

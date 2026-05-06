@@ -1,54 +1,69 @@
 package db
 
 import (
-	"context"
 	"time"
 
-	"github.com/jackc/pgx/v5/pgxpool"
+	"gorm.io/driver/postgres"
+	"gorm.io/gorm"
 )
 
-var readPool *pgxpool.Pool
-var writePool *pgxpool.Pool
+var readDB *gorm.DB
+var writeDB *gorm.DB
 
 func InitDB(
 	readURL string,
 	writeURL string,
 ) error {
 
-	ctx, cancel := context.WithTimeout(
-		context.Background(),
-		10*time.Second,
-	)
-
-	defer cancel()
-
 	var err error
 
-	readPool, err = pgxpool.New(
-		ctx,
-		readURL,
+	readDB, err = gorm.Open(
+		postgres.Open(readURL),
+		&gorm.Config{},
 	)
 
 	if err != nil {
 		return err
 	}
 
-	writePool, err = pgxpool.New(
-		ctx,
-		writeURL,
+	writeDB, err = gorm.Open(
+		postgres.Open(writeURL),
+		&gorm.Config{},
 	)
 
 	if err != nil {
 		return err
 	}
+
+	// Configure read pool
+	readSQLDB, err := readDB.DB()
+
+	if err != nil {
+		return err
+	}
+
+	readSQLDB.SetMaxOpenConns(50)
+	readSQLDB.SetMaxIdleConns(10)
+	readSQLDB.SetConnMaxLifetime(time.Hour)
+
+	// Configure write pool
+	writeSQLDB, err := writeDB.DB()
+
+	if err != nil {
+		return err
+	}
+
+	writeSQLDB.SetMaxOpenConns(50)
+	writeSQLDB.SetMaxIdleConns(10)
+	writeSQLDB.SetConnMaxLifetime(time.Hour)
 
 	return nil
 }
 
-func ReadConnection() *pgxpool.Pool {
-	return readPool
+func ReadConnection() *gorm.DB {
+	return readDB
 }
 
-func WriteConnection() *pgxpool.Pool {
-	return writePool
+func WriteConnection() *gorm.DB {
+	return writeDB
 }

@@ -1,11 +1,11 @@
-package grpc
+package auth
 
 import (
 	"context"
 
 	service "consumer-service/services/authService"
 
-	pb "github.com/Ridit07/hiremind-proto-contracts/generated"
+	pb "github.com/Ridit07/hiremind-proto-contracts/generated/auth"
 )
 
 type AuthServer struct {
@@ -17,16 +17,12 @@ func (s *AuthServer) Signup(
 	req *pb.SignupRequest,
 ) (*pb.SignupResponse, error) {
 
-	err := service.Signup(
-		ctx,
-		req.Email,
-		req.Password,
-		req.UserType,
-		req.PhoneNumber,
-	)
+	err := service.Signup(ctx, mapSignupRequestToService(req))
 
 	if err != nil {
-		return nil, err
+		return &pb.SignupResponse{
+			Error: ToProtoError(err),
+		}, nil
 	}
 
 	return &pb.SignupResponse{
