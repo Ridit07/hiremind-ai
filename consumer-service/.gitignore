@@ -1,0 +1,29 @@
+# binaries
+bin/
+dist/
+build/
+
+# temp
+tmp/
+temp/
+
+# logs
+*.log
+
+# env files
+.env
+
+# IDE
+.vscode/
+.idea/
+
+# macOS
+.DS_Store
+
+# test coverage
+coverage.out
+*.coverprofile
+
+# Go workspace
+go.work
+go.work.sum

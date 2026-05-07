@@ -1,0 +1,69 @@
+package db
+
+import (
+	"time"
+
+	"gorm.io/driver/postgres"
+	"gorm.io/gorm"
+)
+
+var readDB *gorm.DB
+var writeDB *gorm.DB
+
+func InitDB(
+	readURL string,
+	writeURL string,
+) error {
+
+	var err error
+
+	readDB, err = gorm.Open(
+		postgres.Open(readURL),
+		&gorm.Config{},
+	)
+
+	if err != nil {
+		return err
+	}
+
+	writeDB, err = gorm.Open(
+		postgres.Open(writeURL),
+		&gorm.Config{},
+	)
+
+	if err != nil {
+		return err
+	}
+
+	// Configure read pool
+	readSQLDB, err := readDB.DB()
+
+	if err != nil {
+		return err
+	}
+
+	readSQLDB.SetMaxOpenConns(50)
+	readSQLDB.SetMaxIdleConns(10)
+	readSQLDB.SetConnMaxLifetime(time.Hour)
+
+	// Configure write pool
+	writeSQLDB, err := writeDB.DB()
+
+	if err != nil {
+		return err
+	}
+
+	writeSQLDB.SetMaxOpenConns(50)
+	writeSQLDB.SetMaxIdleConns(10)
+	writeSQLDB.SetConnMaxLifetime(time.Hour)
+
+	return nil
+}
+
+func ReadConnection() *gorm.DB {
+	return readDB
+}
+
+func WriteConnection() *gorm.DB {
+	return writeDB
+}
