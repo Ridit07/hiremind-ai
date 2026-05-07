@@ -3,6 +3,7 @@ package auth
 import (
 	"context"
 
+	"consumer-service/services/authService"
 	service "consumer-service/services/authService"
 
 	pb "github.com/Ridit07/hiremind-proto-contracts/generated/auth"
@@ -10,6 +11,7 @@ import (
 
 type AuthServer struct {
 	pb.UnimplementedAuthServiceServer
+	Service *authService.Service
 }
 
 func (s *AuthServer) Signup(
