@@ -2,7 +2,6 @@ package authService
 
 import (
 	"context"
-	"strings"
 	"time"
 
 	"consumer-service/db"
@@ -12,12 +11,10 @@ import (
 
 func Signup(ctx context.Context, req SignupRequest) error {
 
-	if strings.TrimSpace(req.Email) == "" {
-		return errors.BadRequest.New("email is required")
-	}
+	err := validateSignUpRequest(req)
 
-	if req.UserType == "" {
-		return errors.BadRequest.New("user_type is required")
+	if err != nil {
+		return err
 	}
 
 	existingUser, err := model.GetUserDetails(ctx, db.ReadConnection(), model.User{
@@ -38,6 +35,8 @@ func Signup(ctx context.Context, req SignupRequest) error {
 		return err
 	}
 
+	now := time.Now()
+
 	err = model.CreateUser(
 		ctx,
 		db.WriteConnection(),
@@ -47,8 +46,8 @@ func Signup(ctx context.Context, req SignupRequest) error {
 			UserType:     model.UserType(req.UserType),
 			PhoneNumber:  req.PhoneNumber,
 			UserStatus:   model.UserStatusActive,
-			CreatedAt:    time.Now(),
-			UpdatedAt:    time.Now(),
+			CreatedAt:    now,
+			UpdatedAt:    now,
 		},
 	)
 

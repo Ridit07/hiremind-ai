@@ -56,11 +56,11 @@ func GetUserDetails(ctx context.Context, db *gorm.DB, getUsers User) (*User, err
 
 	query := db.WithContext(ctx).Model(&User{})
 
-	validQueery := false
+	validQuery := false
 
 	if strings.TrimSpace(getUsers.Email) != "" {
 		query = query.Where("email = ?", getUsers.Email)
-		validQueery = true
+		validQuery = true
 	}
 
 	if strings.TrimSpace(getUsers.PhoneNumber) != "" {
@@ -71,7 +71,7 @@ func GetUserDetails(ctx context.Context, db *gorm.DB, getUsers User) (*User, err
 		query = query.Where("user_type = ?", getUsers.UserType)
 	}
 
-	if !validQueery {
+	if !validQuery {
 		return nil, errorv2.Database.New(
 			"at least one indexed filter is required",
 		)
