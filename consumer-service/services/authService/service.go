@@ -114,3 +114,43 @@ func (s *Service) Login(ctx context.Context, req LoginRequest) (resp LoginRespon
 		RefreshToken: refreshToken,
 	}, nil
 }
+
+func (s *Service) RefreshToken(ctx context.Context, refreshToken string) (LoginResponse, error) {
+
+	userID, err := s.redis.Get(ctx, refreshToken)
+	if err != nil {
+		return LoginResponse{}, errors.BadRequest.New("invalid refresh token")
+	}
+
+	err = s.redis.Delete(ctx, refreshToken)
+	if err != nil {
+		return LoginResponse{}, err
+	}
+
+	newRefreshToken := uuid.NewString()
+
+	err = s.redis.Set(ctx, newRefreshToken, userID, 24*time.Hour)
+	if err != nil {
+		return LoginResponse{}, err
+	}
+
+	accessToken, err := s.GenerateJWT(userID)
+	if err != nil {
+		return LoginResponse{}, err
+	}
+
+	return LoginResponse{
+		AccessToken:  accessToken,
+		RefreshToken: newRefreshToken,
+	}, nil
+}
+
+func (s *Service) Logout(ctx context.Context, refreshToken string) error {
+
+	err := s.redis.Delete(ctx, refreshToken)
+	if err != nil {
+		return errors.Internal.Wrap(err, "failed to logout")
+	}
+
+	return nil
+}

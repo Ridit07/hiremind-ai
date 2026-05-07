@@ -32,8 +32,9 @@ func main() {
 	}
 
 	rdb := redis.NewClient(&redis.Options{
-		Addr: "localhost:6379", // move to env later
+		Addr: os.Getenv("REDIS_ADDR"),
 	})
+
 	redisWrapper := redisclient.NewClient(rdb)
 
 	jwtSecret := os.Getenv("JWT_SECRET")
@@ -43,7 +44,6 @@ func main() {
 
 	authSvc := authService.NewService(redisWrapper, jwtSecret)
 
-	// ✅ Setup gRPC server WITH interceptors
 	grpcServer := grpc.NewServer(
 		grpc.ChainUnaryInterceptor(
 			authService.LoggingInterceptor(),
@@ -52,7 +52,6 @@ func main() {
 		),
 	)
 
-	// ✅ Inject service into transport
 	pb.RegisterAuthServiceServer(
 		grpcServer,
 		&authServer.AuthServer{

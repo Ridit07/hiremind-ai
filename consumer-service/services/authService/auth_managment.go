@@ -27,7 +27,9 @@ func AuthInterceptor(svc *Service) grpc.UnaryServerInterceptor {
 
 		// skip auth for login/signup
 		if info.FullMethod == "/auth.AuthService/Login" ||
-			info.FullMethod == "/auth.AuthService/Signup" {
+			info.FullMethod == "/auth.AuthService/Signup" ||
+			info.FullMethod == "/auth.AuthService/RefreshToken" ||
+			info.FullMethod == "/auth.AuthService/Logout" {
 			return handler(ctx, req)
 		}
 
