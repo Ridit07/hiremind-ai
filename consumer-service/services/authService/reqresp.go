@@ -7,6 +7,10 @@ const (
 	UserTypeHR        UserType = "hr"
 )
 
+type contextKey string
+
+const userIDKey contextKey = "user_id"
+
 type SignupRequest struct {
 	Email       string   `json:"email"`
 	Password    string   `json:"password"`
@@ -24,5 +28,6 @@ type LoginRequest struct {
 }
 
 type LoginResponse struct {
-	AccessToken string `json:"access_token"`
+	AccessToken  string `json:"access_token"`
+	RefreshToken string `json:"refresh_token"`
 }

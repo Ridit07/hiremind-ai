@@ -29,3 +29,14 @@ func mapUserType(protoUserType pb.UserType) service.UserType {
 		return ""
 	}
 }
+
+func mapLoginRequestToService(req *pb.LoginRequest) service.LoginRequest {
+	if req == nil {
+		return service.LoginRequest{}
+	}
+
+	return service.LoginRequest{
+		Email:    req.Email,
+		Password: req.Password,
+	}
+}
