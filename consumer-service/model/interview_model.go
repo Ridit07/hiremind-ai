@@ -69,9 +69,7 @@ func GetInterview(ctx context.Context, db *gorm.DB, getInterview Interview) ([]I
 			getInterview.ParticipantID,
 		)
 		validQuery = true
-	}
-
-	if getInterview.HrID != "" && getInterview.CandidateID != "" {
+	} else if getInterview.HrID != "" && getInterview.CandidateID != "" {
 		query = query.Where("hr_id = ? AND candidate_id = ?", getInterview.HrID, getInterview.CandidateID)
 		validQuery = true
 	} else if getInterview.HrID != "" {
