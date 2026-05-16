@@ -60,7 +60,7 @@ func CreateUser(ctx context.Context, db *gorm.DB, user *User) error {
 
 func GetUserDetails(ctx context.Context, db *gorm.DB, getUsers GetUser) ([]User, error) {
 
-	var user []User
+	var users []User
 
 	query := db.WithContext(ctx).Model(&User{})
 
@@ -94,7 +94,7 @@ func GetUserDetails(ctx context.Context, db *gorm.DB, getUsers GetUser) ([]User,
 		)
 	}
 
-	err := query.Find(&user).Error
+	err := query.Find(&users).Error
 
 	if err != nil {
 
@@ -108,5 +108,5 @@ func GetUserDetails(ctx context.Context, db *gorm.DB, getUsers GetUser) ([]User,
 		)
 	}
 
-	return user, nil
+	return users, nil
 }
