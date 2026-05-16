@@ -37,8 +37,8 @@ func Signup(ctx context.Context, req SignupRequest) error {
 		return err
 	}
 
-	existingUser, err := model.GetUserDetails(ctx, db.ReadConnection(), model.User{
-		Email: req.Email,
+	existingUser, err := model.GetUserDetails(ctx, db.ReadConnection(), model.GetUser{
+		Email: []string{req.Email},
 	})
 
 	if err != nil {
@@ -80,30 +80,31 @@ func Signup(ctx context.Context, req SignupRequest) error {
 
 func (s *Service) Login(ctx context.Context, req LoginRequest) (resp LoginResponse, err error) {
 
-	user, err := model.GetUserDetails(ctx, db.ReadConnection(), model.User{
-		Email: req.Email,
+	user, err := model.GetUserDetails(ctx, db.ReadConnection(), model.GetUser{
+		Email: []string{req.Email},
 	})
+
 	if err != nil {
 		return LoginResponse{}, err
 	}
 
-	if user == nil {
+	if len(user) == 0 {
 		return LoginResponse{}, errors.BadRequest.New("invalid credentials")
 	}
 
-	err = ComparePassword(user.PasswordHash, req.Password)
+	err = ComparePassword(user[0].PasswordHash, req.Password)
 	if err != nil {
 		return LoginResponse{}, errors.BadRequest.New("invalid credentials")
 	}
 
-	accessToken, err := s.GenerateJWT(user.UserID)
+	accessToken, err := s.GenerateJWT(user[0].UserID)
 	if err != nil {
 		return LoginResponse{}, err
 	}
 
 	refreshToken := uuid.NewString()
 
-	err = s.redis.Set(ctx, refreshToken, user.UserID, time.Hour*24)
+	err = s.redis.Set(ctx, refreshToken, user[0].UserID, time.Hour*24)
 
 	if err != nil {
 		return LoginResponse{}, err

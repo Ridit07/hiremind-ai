@@ -6,6 +6,8 @@ import (
 	"consumer-service/services/authService"
 	service "consumer-service/services/authService"
 
+	errormapper "consumer-service/transport_grpc/common"
+
 	pb "github.com/Ridit07/hiremind-proto-contracts/generated/auth"
 )
 
@@ -23,7 +25,7 @@ func (s *AuthServer) Signup(
 
 	if err != nil {
 		return &pb.SignupResponse{
-			Error: ToProtoError(err),
+			Error: errormapper.ToProtoError(err),
 		}, nil
 	}
 
@@ -41,7 +43,7 @@ func (s *AuthServer) Login(
 
 	if err != nil {
 		return &pb.LoginResponse{
-			Error: ToProtoError(err),
+			Error: errormapper.ToProtoError(err),
 		}, nil
 	}
 
@@ -60,7 +62,7 @@ func (s *AuthServer) RefreshToken(
 
 	if err != nil {
 		return &pb.RefreshTokenResponse{
-			Error: ToProtoError(err),
+			Error: errormapper.ToProtoError(err),
 		}, nil
 	}
 
@@ -79,7 +81,7 @@ func (s *AuthServer) Logout(
 
 	if err != nil {
 		return &pb.LogoutResponse{
-			Error: ToProtoError(err),
+			Error: errormapper.ToProtoError(err),
 		}, nil
 	}
 
