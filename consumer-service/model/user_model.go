@@ -94,7 +94,7 @@ func GetUserDetails(ctx context.Context, db *gorm.DB, getUsers GetUser) ([]User,
 		)
 	}
 
-	err := query.First(&user).Error
+	err := query.Find(&user).Error
 
 	if err != nil {
 
