@@ -8,11 +8,14 @@ import (
 	"consumer-service/config"
 	"consumer-service/db"
 	"consumer-service/services/authService"
+	"consumer-service/services/interviewService"
 	authServer "consumer-service/transport_grpc/auth"
+	interviewServer "consumer-service/transport_grpc/interview"
 
 	"consumer-service/redisclient"
 
-	pb "github.com/Ridit07/hiremind-proto-contracts/generated/auth"
+	authpb "github.com/Ridit07/hiremind-proto-contracts/generated/auth"
+	interviewpb "github.com/Ridit07/hiremind-proto-contracts/generated/interview"
 	"github.com/redis/go-redis/v9"
 
 	"google.golang.org/grpc"
@@ -43,6 +46,7 @@ func main() {
 	}
 
 	authSvc := authService.NewService(redisWrapper, jwtSecret)
+	interviewSvc := interviewService.NewService()
 
 	grpcServer := grpc.NewServer(
 		grpc.ChainUnaryInterceptor(
@@ -52,10 +56,17 @@ func main() {
 		),
 	)
 
-	pb.RegisterAuthServiceServer(
+	authpb.RegisterAuthServiceServer(
 		grpcServer,
 		&authServer.AuthServer{
 			Service: authSvc,
+		},
+	)
+
+	interviewpb.RegisterInterviewServiceServer(
+		grpcServer,
+		&interviewServer.InterviewServer{
+			Service: interviewSvc,
 		},
 	)
 

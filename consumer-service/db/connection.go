@@ -5,6 +5,7 @@ import (
 
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
 )
 
 var readDB *gorm.DB
@@ -19,7 +20,9 @@ func InitDB(
 
 	readDB, err = gorm.Open(
 		postgres.Open(readURL),
-		&gorm.Config{},
+		&gorm.Config{
+			Logger: logger.Default.LogMode(logger.Info),
+		},
 	)
 
 	if err != nil {
@@ -28,7 +31,9 @@ func InitDB(
 
 	writeDB, err = gorm.Open(
 		postgres.Open(writeURL),
-		&gorm.Config{},
+		&gorm.Config{
+			Logger: logger.Default.LogMode(logger.Info),
+		},
 	)
 
 	if err != nil {

@@ -21,6 +21,14 @@ type User struct {
 	UpdatedAt    time.Time  `gorm:"column:updated_at"`
 }
 
+type GetUser struct {
+	UserID      []string
+	Email       []string
+	UserType    UserType
+	PhoneNumber string
+	UserStatus  UserStatus
+}
+
 type UserType string
 
 const (
@@ -50,16 +58,25 @@ func CreateUser(ctx context.Context, db *gorm.DB, user *User) error {
 	return nil
 }
 
-func GetUserDetails(ctx context.Context, db *gorm.DB, getUsers User) (*User, error) {
+func GetUserDetails(ctx context.Context, db *gorm.DB, getUsers GetUser) ([]User, error) {
 
-	var user User
+	var user []User
 
 	query := db.WithContext(ctx).Model(&User{})
 
 	validQuery := false
 
-	if strings.TrimSpace(getUsers.Email) != "" {
-		query = query.Where("email = ?", getUsers.Email)
+	if len(getUsers.UserID) > 0 {
+
+		query = query.Where("user_id IN ?", getUsers.UserID)
+
+		validQuery = true
+	}
+
+	if len(getUsers.Email) > 0 {
+
+		query = query.Where("email IN ?", getUsers.Email)
+
 		validQuery = true
 	}
 
@@ -73,7 +90,7 @@ func GetUserDetails(ctx context.Context, db *gorm.DB, getUsers User) (*User, err
 
 	if !validQuery {
 		return nil, errorv2.Database.New(
-			"at least one indexed filter is required",
+			"at least one indexed filter is required to get users",
 		)
 	}
 
@@ -91,5 +108,5 @@ func GetUserDetails(ctx context.Context, db *gorm.DB, getUsers User) (*User, err
 		)
 	}
 
-	return &user, nil
+	return user, nil
 }
