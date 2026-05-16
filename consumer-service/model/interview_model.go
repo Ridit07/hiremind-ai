@@ -13,6 +13,7 @@ type Interview struct {
 	InterviewID         string          `gorm:"column:interview_id;type:uuid;default:gen_random_uuid();primaryKey"`
 	HrID                string          `gorm:"column:hr_id;type:uuid;not null;index"`
 	CandidateID         string          `gorm:"column:candidate_id;type:uuid;not null;index"`
+	ParticipantID       string          `gorm:"-"`
 	InterviewDatetime   time.Time       `gorm:"column:interview_datetime;not null"`
 	Status              InterviewStatus `gorm:"column:status;default:'scheduled'"`
 	InterviewReportPath string          `gorm:"column:interview_report_path"`
@@ -59,21 +60,28 @@ func GetInterview(ctx context.Context, db *gorm.DB, getInterview Interview) ([]I
 
 	getInterview.HrID = strings.TrimSpace(getInterview.HrID)
 	getInterview.CandidateID = strings.TrimSpace(getInterview.CandidateID)
+	getInterview.ParticipantID = strings.TrimSpace(getInterview.ParticipantID)
 
-	skipCandidateIdAndHrId := false
-
-	if getInterview.HrID != "" && getInterview.CandidateID != "" {
-		query = query.Where("hr_id = ? OR candidate_id = ?", getInterview.HrID, getInterview.CandidateID)
-		skipCandidateIdAndHrId = true
+	if getInterview.ParticipantID != "" {
+		query = query.Where(
+			"hr_id = ? OR candidate_id = ?",
+			getInterview.ParticipantID,
+			getInterview.ParticipantID,
+		)
 		validQuery = true
 	}
 
-	if !skipCandidateIdAndHrId && getInterview.HrID != "" {
+	if getInterview.HrID != "" && getInterview.CandidateID != "" {
+		query = query.Where("hr_id = ? AND candidate_id = ?", getInterview.HrID, getInterview.CandidateID)
+		validQuery = true
+	}
+
+	if getInterview.HrID != "" && getInterview.CandidateID == "" {
 		query = query.Where("hr_id = ?", getInterview.HrID)
 		validQuery = true
 	}
 
-	if !skipCandidateIdAndHrId && getInterview.CandidateID != "" {
+	if getInterview.CandidateID != "" && getInterview.HrID == "" {
 		query = query.Where("candidate_id = ?", getInterview.CandidateID)
 		validQuery = true
 	}

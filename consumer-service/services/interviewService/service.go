@@ -22,8 +22,7 @@ func (s *Service) GetInterviews(ctx context.Context, req GetInterviewsRequest) (
 	}
 
 	interviews, err := model.GetInterview(ctx, db.ReadConnection(), model.Interview{
-		HrID:        req.UserID,
-		CandidateID: req.UserID,
+		ParticipantID: req.UserID,
 	})
 
 	if err != nil {
