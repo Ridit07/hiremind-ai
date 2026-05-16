@@ -5,10 +5,10 @@ import "time"
 type InterviewStatus string
 
 const (
+	InterviewStatusScheduled   InterviewStatus = "scheduled"
 	InterviewStatusOngoing     InterviewStatus = "ongoing"
 	InterviewStatusCompleted   InterviewStatus = "completed"
 	InterviewStatusCancelled   InterviewStatus = "cancelled"
-	InterviewStatusScheduled   InterviewStatus = "scheduled"
 	InterviewStatusNoShow      InterviewStatus = "no_show"
 	InterviewStatusRescheduled InterviewStatus = "rescheduled"
 )

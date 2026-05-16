@@ -2,6 +2,7 @@ package http
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"io"
 	"log"
@@ -49,7 +50,6 @@ func LoggingMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		start := time.Now()
 
-		// Capture request body
 		var requestBody map[string]interface{}
 		if r.Body != nil && r.ContentLength > 0 {
 			bodyBytes, _ := io.ReadAll(r.Body)
@@ -57,15 +57,12 @@ func LoggingMiddleware(next http.Handler) http.Handler {
 			r.Body = io.NopCloser(bytes.NewBuffer(bodyBytes))
 		}
 
-		// Wrap response writer to capture response body
 		wrapped := &responseWriter{ResponseWriter: w, statusCode: http.StatusOK}
 
-		// Call the next handler
 		next.ServeHTTP(wrapped, r)
 
 		duration := time.Since(start)
 
-		// Parse response body
 		var responseBody map[string]interface{}
 		if wrapped.body.Len() > 0 {
 			json.Unmarshal(wrapped.body.Bytes(), &responseBody)
@@ -92,3 +89,44 @@ func LoggingMiddleware(next http.Handler) http.Handler {
 }
 
 var _ func(http.Handler) http.Handler = LoggingMiddleware
+
+func AuthMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		authHeader := r.Header.Get("Authorization")
+		if authHeader == "" {
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusUnauthorized)
+			json.NewEncoder(w).Encode(map[string]interface{}{
+				"error": "missing authorization header",
+			})
+			return
+		}
+
+		if len(authHeader) < 7 || authHeader[:7] != "Bearer " {
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusUnauthorized)
+			json.NewEncoder(w).Encode(map[string]interface{}{
+				"error": "invalid authorization header format",
+			})
+			return
+		}
+
+		userID := r.Header.Get("X-User-ID")
+		if userID == "" {
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusUnauthorized)
+			json.NewEncoder(w).Encode(map[string]interface{}{
+				"error": "missing X-User-ID header",
+			})
+			return
+		}
+
+		log.Printf("Auth middleware: user_id=%s, auth_header_present=true", userID)
+
+		token := authHeader[7:]
+
+		ctx := context.WithValue(r.Context(), "user_id", userID)
+		ctx = context.WithValue(ctx, "token", token)
+		next.ServeHTTP(w, r.WithContext(ctx))
+	})
+}

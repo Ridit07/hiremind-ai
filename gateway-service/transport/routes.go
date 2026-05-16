@@ -3,28 +3,38 @@ package http
 import (
 	"net/http"
 
-	server "gateway-service/server/authserver"
+	authserver "gateway-service/server/authserver"
+	interviewserver "gateway-service/server/interviewserver"
 
 	authhttp "gateway-service/transport/authtransport"
+	interviewhttp "gateway-service/transport/interviewtransport"
+
+	common "gateway-service/transport/common"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 )
 
-func SetupRoutes(service server.GatewayServiceInterface) http.Handler {
+func SetupRoutes(authSvc authserver.GatewayServiceInterface, interviewSvc interviewserver.InterviewServiceInterface) http.Handler {
 	router := chi.NewRouter()
 
 	router.Use(middleware.Logger)
 	router.Use(middleware.Recoverer)
-	router.Use(LoggingMiddleware)
+	router.Use(common.LoggingMiddleware)
 
-	handlers := authhttp.NewAuthHTTPHandlers(service)
+	authHandlers := authhttp.NewAuthHTTPHandlers(authSvc)
+	interviewHandlers := interviewhttp.NewInterviewHTTPHandlers(interviewSvc)
 
 	router.Route("/api/v1/auth", func(r chi.Router) {
-		r.Post("/signup", handlers.Signup)
-		r.Post("/login", handlers.Login)
-		r.Post("/refresh", handlers.RefreshToken)
-		r.Post("/logout", handlers.Logout)
+		r.Post("/signup", authHandlers.Signup)
+		r.Post("/login", authHandlers.Login)
+		r.Post("/refresh", authHandlers.RefreshToken)
+		r.Post("/logout", authHandlers.Logout)
+	})
+
+	router.Route("/api/v1/interviews", func(r chi.Router) {
+		r.Use(common.AuthMiddleware)
+		r.Get("/", interviewHandlers.GetInterviews)
 	})
 
 	router.Get("/health", func(w http.ResponseWriter, r *http.Request) {
