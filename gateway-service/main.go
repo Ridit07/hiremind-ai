@@ -24,7 +24,7 @@ func main() {
 		log.Fatalf("failed to connect to auth service: %v", err)
 	}
 	defer authConn.Close()
-
+	// why insecure
 	interviewConn, err := grpc.Dial(
 		cfg.InterviewServiceAddr,
 		grpc.WithInsecure(),
