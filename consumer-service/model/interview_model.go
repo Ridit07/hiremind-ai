@@ -14,8 +14,8 @@ type Interview struct {
 	HrID                string          `gorm:"column:hr_id;type:uuid;not null;index"`
 	CandidateID         string          `gorm:"column:candidate_id;type:uuid;not null;index"`
 	ParticipantID       string          `gorm:"-"`
-	InterviewDatetime   time.Time       `gorm:"column:interview_datetime;not null"`
-	Status              InterviewStatus `gorm:"column:status;default:'scheduled'"`
+	InterviewDatetime   time.Time       `gorm:"column:interview_datetime;not null;index"`
+	Status              InterviewStatus `gorm:"column:interview_status;default:'scheduled';index"`
 	InterviewReportPath string          `gorm:"column:interview_report_path"`
 	CreatedAt           time.Time       `gorm:"column:created_at"`
 	UpdatedAt           time.Time       `gorm:"column:updated_at"`
@@ -81,7 +81,7 @@ func GetInterview(ctx context.Context, db *gorm.DB, getInterview Interview) ([]I
 	}
 
 	if string(getInterview.Status) != "" {
-		query = query.Where("status = ?", getInterview.Status)
+		query = query.Where("interview_status = ?", getInterview.Status)
 		validQuery = true
 	}
 
