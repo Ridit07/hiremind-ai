@@ -3,6 +3,7 @@ package interviewtransport
 import (
 	"net/http"
 
+	"gateway-service/errors"
 	interviewserver "gateway-service/server/interviewserver"
 	commonhttp "gateway-service/transport/common"
 )
@@ -28,6 +29,10 @@ func (h *InterviewHTTPHandlers) GetInterviews(w http.ResponseWriter, r *http.Req
 
 	resp, err := h.service.GetInterviews(ctx, userID)
 	if err != nil {
+		if appErr, ok := errors.IsAppError(err); ok {
+			commonhttp.RespondWithError(w, appErr.Code, appErr.Message)
+			return
+		}
 		commonhttp.RespondWithError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
