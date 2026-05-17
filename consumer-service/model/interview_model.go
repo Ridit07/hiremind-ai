@@ -81,7 +81,7 @@ func GetInterview(ctx context.Context, db *gorm.DB, getInterview Interview) ([]I
 	}
 
 	if string(getInterview.Status) != "" {
-		query = query.Where("status = ?", getInterview.Status)
+		query = query.Where("interview_status = ?", getInterview.Status)
 		validQuery = true
 	}
 
