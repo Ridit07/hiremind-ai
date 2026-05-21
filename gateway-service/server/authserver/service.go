@@ -115,7 +115,7 @@ func (s *GatewayService) RefreshToken(ctx context.Context, refreshToken string) 
 
 func (s *GatewayService) Logout(ctx context.Context, refreshToken string) (*LogoutResponse, error) {
 	if strings.TrimSpace(refreshToken) == "" {
-		return nil, errors.BadRequest.New("refresh token cannot be empty")
+		return nil, errors.BadRequest.New("refresh token cannot be empty to logout")
 	}
 
 	protoResp, err := s.authClient.Logout(ctx, &pb.LogoutRequest{
