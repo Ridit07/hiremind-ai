@@ -44,7 +44,7 @@ func (s *GatewayService) Signup(ctx context.Context, req *SignupRequest) (*Signu
 	}
 
 	if protoResp == nil {
-		return nil, errors.Internal.New("received nil response from auth service")
+		return nil, errors.Internal.New("received nil response from auth service for signup")
 	}
 
 	if protoResp.Error != nil {
