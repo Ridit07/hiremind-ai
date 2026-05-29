@@ -20,6 +20,7 @@ func SetupRoutes(authSvc authserver.GatewayServiceInterface, interviewSvc interv
 
 	router.Use(middleware.Logger)
 	router.Use(middleware.Recoverer)
+	router.Use(common.CORSMiddleware)
 	router.Use(common.LoggingMiddleware)
 
 	authHandlers := authhttp.NewAuthHTTPHandlers(authSvc)
@@ -34,7 +35,7 @@ func SetupRoutes(authSvc authserver.GatewayServiceInterface, interviewSvc interv
 
 	router.Route("/api/v1/interviews", func(r chi.Router) {
 		r.Use(common.AuthMiddleware)
-		r.Get("", interviewHandlers.GetInterviews)
+		r.Get("/", interviewHandlers.GetInterviews)
 	})
 
 	router.Get("/health", func(w http.ResponseWriter, r *http.Request) {

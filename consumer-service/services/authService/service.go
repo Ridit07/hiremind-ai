@@ -45,8 +45,8 @@ func Signup(ctx context.Context, req SignupRequest) error {
 		return err
 	}
 
-	if existingUser != nil {
-		return errors.BadRequest.New("user already exists")
+	if len(existingUser) != 0 {
+		return errors.BadRequest.New("user already existsss")
 	}
 
 	hashedPassword, err := HashPassword(req.Password)
