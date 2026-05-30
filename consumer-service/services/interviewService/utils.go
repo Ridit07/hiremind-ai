@@ -4,21 +4,21 @@ import (
 	"consumer-service/common"
 	errorv2 "consumer-service/errors"
 	"consumer-service/model"
+	"consumer-service/services/authService"
 	"context"
 	"strings"
 )
 
 func getValidateGetInterviewsRequest(ctx context.Context, req GetInterviewsRequest) (GetInterviewsRequest, error) {
 
-	if strings.TrimSpace(req.UserID) == "" {
-		userID, ok := ctx.Value("user_id").(string)
-
-		if ok {
-			req.UserID = userID
-		}
-	}
-
 	req.UserID = strings.TrimSpace(req.UserID)
+
+	if authenticatedUserID, ok := authService.GetAuthenticatedUserID(ctx); ok {
+		if req.UserID != "" && req.UserID != authenticatedUserID {
+			return GetInterviewsRequest{}, errorv2.BadRequest.New("user_id does not match authenticated user")
+		}
+		req.UserID = authenticatedUserID
+	}
 
 	if err := common.ValidateUUID(req.UserID); err != nil {
 		return GetInterviewsRequest{}, errorv2.BadRequest.Wrap(err, "invalid user_id")
