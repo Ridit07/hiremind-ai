@@ -53,7 +53,9 @@ func (s *GatewayService) Signup(ctx context.Context, req *SignupRequest) (*Signu
 	}
 
 	return &SignupResponse{
-		Message: protoResp.Message,
+		AccessToken:  protoResp.AccessToken,
+		RefreshToken: protoResp.RefreshToken,
+		Message:      protoResp.Message,
 	}, nil
 }
 
