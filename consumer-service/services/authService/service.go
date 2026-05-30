@@ -74,6 +74,9 @@ func (s *Service) Signup(ctx context.Context, req SignupRequest) (LoginResponse,
 	}
 
 	getAccessAndRefreshTokenResp, err := s.getAccessAndRefreshToken(ctx, newUser.UserID)
+	if err != nil {
+		return LoginResponse{}, err
+	}
 
 	return LoginResponse{
 		AccessToken:  getAccessAndRefreshTokenResp.AccessToken,
