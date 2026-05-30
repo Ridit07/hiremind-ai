@@ -33,6 +33,29 @@ interface StoredTokens {
     expiresAt: number;
 }
 
+function getAccessTokenExpiry(accessToken: string): number {
+    try {
+        const payload = accessToken.split('.')[1];
+        if (!payload) {
+            return Date.now();
+        }
+
+        const normalizedPayload = payload.replace(/-/g, '+').replace(/_/g, '/');
+        const paddedPayload = normalizedPayload.padEnd(
+            normalizedPayload.length + ((4 - (normalizedPayload.length % 4)) % 4),
+            '='
+        );
+        const decodedPayload = JSON.parse(atob(paddedPayload));
+        if (typeof decodedPayload.exp === 'number') {
+            return decodedPayload.exp * 1000;
+        }
+    } catch {
+        // fall through to immediate expiry
+    }
+
+    return Date.now();
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
@@ -71,8 +94,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }, []);
 
     const storeTokens = useCallback((access: string, refresh: string) => {
-        // Store tokens with 1 hour expiry
-        const expiresAt = Date.now() + 60 * 60 * 1000;
+        const expiresAt = getAccessTokenExpiry(access);
         const tokens: StoredTokens = {
             accessToken: access,
             refreshToken: refresh,
