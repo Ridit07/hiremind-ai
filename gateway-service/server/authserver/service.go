@@ -139,4 +139,4 @@ func (s *GatewayService) Logout(ctx context.Context, refreshToken string) (*Logo
 	return &LogoutResponse{
 		Message: protoResp.Message,
 	}, nil
-} //
+}
