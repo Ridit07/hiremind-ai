@@ -4,10 +4,19 @@ import (
 	"consumer-service/common"
 	errorv2 "consumer-service/errors"
 	"consumer-service/model"
+	"context"
 	"strings"
 )
 
-func getValidateGetInterviewsRequest(req GetInterviewsRequest) (GetInterviewsRequest, error) {
+func getValidateGetInterviewsRequest(ctx context.Context, req GetInterviewsRequest) (GetInterviewsRequest, error) {
+
+	if strings.TrimSpace(req.UserID) == "" {
+		userID, ok := ctx.Value("user_id").(string)
+
+		if ok {
+			req.UserID = userID
+		}
+	}
 
 	req.UserID = strings.TrimSpace(req.UserID)
 

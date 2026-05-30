@@ -16,7 +16,7 @@ func NewService() *Service {
 
 func (s *Service) GetInterviews(ctx context.Context, req GetInterviewsRequest) (resp GetInterviewsResponse, err error) {
 
-	req, err = getValidateGetInterviewsRequest(req)
+	req, err = getValidateGetInterviewsRequest(ctx, req)
 	if err != nil {
 		return GetInterviewsResponse{}, err
 	}
