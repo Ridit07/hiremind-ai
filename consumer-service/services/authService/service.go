@@ -46,7 +46,7 @@ func (s *Service) Signup(ctx context.Context, req SignupRequest) (LoginResponse,
 	}
 
 	if len(existingUser) != 0 {
-		return LoginResponse{}, errors.BadRequest.New("user already existsss")
+		return LoginResponse{}, errors.BadRequest.New("user already exists")
 	}
 
 	hashedPassword, err := HashPassword(req.Password)
