@@ -109,8 +109,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           throw new Error(response.error.message);
         }
 
-        // After signup, automatically login
-        await login(email, password);
+        // Signup now returns tokens directly!
+        if (response.access_token && response.refresh_token) {
+          storeTokens(response.access_token, response.refresh_token);
+        } else {
+          throw new Error('No tokens received from signup');
+        }
       } catch (err) {
         const errorMessage = err instanceof Error ? err.message : 'Signup failed';
         setError(errorMessage);
@@ -119,7 +123,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setIsLoading(false);
       }
     },
-    []
+    [storeTokens]
   );
 
   const login = useCallback(async (email: string, password: string) => {

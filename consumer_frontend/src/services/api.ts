@@ -31,6 +31,8 @@ export interface SignupRequest {
 
 export interface SignupResponse {
   message: string;
+  access_token?: string;
+  refresh_token?: string;
   error?: {
     code: number;
     type: string;
