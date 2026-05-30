@@ -14,7 +14,9 @@ function extractUserIdFromToken(token: string): string {
             return '';
         }
 
-        const decoded = JSON.parse(atob(parts[1]));
+        const base64 = parts[1].replace(/-/g, '+').replace(/_/g, '/');
+        const padded = base64.padEnd(base64.length + (4 - (base64.length % 4)) % 4, '=');
+        const decoded = JSON.parse(atob(padded));
         return decoded.sub || decoded.user_id || decoded.userId || '';
     } catch (error) {
         console.warn('Failed to decode token:', error);
