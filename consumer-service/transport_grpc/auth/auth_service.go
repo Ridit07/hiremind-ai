@@ -4,7 +4,6 @@ import (
 	"context"
 
 	"consumer-service/services/authService"
-	service "consumer-service/services/authService"
 
 	errormapper "consumer-service/transport_grpc/common"
 
@@ -21,7 +20,7 @@ func (s *AuthServer) Signup(
 	req *pb.SignupRequest,
 ) (*pb.SignupResponse, error) {
 
-	err := service.Signup(ctx, mapSignupRequestToService(req))
+	resp, err := s.Service.Signup(ctx, mapSignupRequestToService(req))
 
 	if err != nil {
 		return &pb.SignupResponse{
@@ -30,7 +29,9 @@ func (s *AuthServer) Signup(
 	}
 
 	return &pb.SignupResponse{
-		Message: "signup successful",
+		AccessToken:  resp.AccessToken,
+		RefreshToken: resp.RefreshToken,
+		Message:      "signup successful",
 	}, nil
 }
 

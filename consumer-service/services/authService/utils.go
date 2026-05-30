@@ -2,8 +2,11 @@ package authService
 
 import (
 	"consumer-service/errors"
+	"context"
 	"strings"
+	"time"
 
+	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -47,4 +50,25 @@ func validateSignUpRequest(req SignupRequest) error {
 	}
 
 	return nil
+}
+
+func (s *Service) getAccessAndRefreshToken(ctx context.Context, userID string) (getAccessAndRefreshTokenResp, error) {
+
+	accessToken, err := s.GenerateJWT(userID)
+	if err != nil {
+		return getAccessAndRefreshTokenResp{}, err
+	}
+
+	refreshToken := uuid.NewString()
+
+	err = s.redis.Set(ctx, refreshToken, userID, time.Hour*24)
+
+	if err != nil {
+		return getAccessAndRefreshTokenResp{}, err
+	}
+
+	return getAccessAndRefreshTokenResp{
+		AccessToken:  accessToken,
+		RefreshToken: refreshToken,
+	}, nil
 }
