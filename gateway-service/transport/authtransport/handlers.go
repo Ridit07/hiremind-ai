@@ -8,6 +8,7 @@ import (
 
 	"gateway-service/errors"
 	server "gateway-service/server/authserver"
+	common "gateway-service/transport/common"
 )
 
 type HTTPHandlers struct {
@@ -28,7 +29,7 @@ func (h *HTTPHandlers) Signup(w http.ResponseWriter, r *http.Request) {
 
 	var req server.SignupRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		respondWithError(w, http.StatusBadRequest, "invalid request body")
+		common.RespondWithError(w, http.StatusBadRequest, "invalid request body")
 		return
 	}
 
@@ -38,14 +39,14 @@ func (h *HTTPHandlers) Signup(w http.ResponseWriter, r *http.Request) {
 	resp, err := h.service.Signup(ctx, &req)
 	if err != nil {
 		if appErr, ok := errors.IsAppError(err); ok {
-			respondWithError(w, appErr.Code, appErr.Message)
+			common.RespondWithError(w, appErr.Code, appErr.Message)
 			return
 		}
-		respondWithError(w, http.StatusInternalServerError, err.Error())
+		common.RespondWithError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
-	respondWithJSON(w, http.StatusOK, resp)
+	common.RespondWithJSON(w, http.StatusOK, resp)
 }
 
 func (h *HTTPHandlers) Login(w http.ResponseWriter, r *http.Request) {
@@ -56,7 +57,7 @@ func (h *HTTPHandlers) Login(w http.ResponseWriter, r *http.Request) {
 
 	var req server.LoginRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		respondWithError(w, http.StatusBadRequest, "invalid request body")
+		common.RespondWithError(w, http.StatusBadRequest, "invalid request body")
 		return
 	}
 
@@ -66,14 +67,14 @@ func (h *HTTPHandlers) Login(w http.ResponseWriter, r *http.Request) {
 	resp, err := h.service.Login(ctx, &req)
 	if err != nil {
 		if appErr, ok := errors.IsAppError(err); ok {
-			respondWithError(w, appErr.Code, appErr.Message)
+			common.RespondWithError(w, appErr.Code, appErr.Message)
 			return
 		}
-		respondWithError(w, http.StatusInternalServerError, err.Error())
+		common.RespondWithError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
-	respondWithJSON(w, http.StatusOK, resp)
+	common.RespondWithJSON(w, http.StatusOK, resp)
 }
 
 func (h *HTTPHandlers) RefreshToken(w http.ResponseWriter, r *http.Request) {
@@ -86,7 +87,7 @@ func (h *HTTPHandlers) RefreshToken(w http.ResponseWriter, r *http.Request) {
 		RefreshToken string `json:"refresh_token"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		respondWithError(w, http.StatusBadRequest, "invalid request body")
+		common.RespondWithError(w, http.StatusBadRequest, "invalid request body")
 		return
 	}
 
@@ -96,14 +97,14 @@ func (h *HTTPHandlers) RefreshToken(w http.ResponseWriter, r *http.Request) {
 	resp, err := h.service.RefreshToken(ctx, req.RefreshToken)
 	if err != nil {
 		if appErr, ok := errors.IsAppError(err); ok {
-			respondWithError(w, appErr.Code, appErr.Message)
+			common.RespondWithError(w, appErr.Code, appErr.Message)
 			return
 		}
-		respondWithError(w, http.StatusInternalServerError, err.Error())
+		common.RespondWithError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
-	respondWithJSON(w, http.StatusOK, resp)
+	common.RespondWithJSON(w, http.StatusOK, resp)
 }
 
 func (h *HTTPHandlers) Logout(w http.ResponseWriter, r *http.Request) {
@@ -116,7 +117,7 @@ func (h *HTTPHandlers) Logout(w http.ResponseWriter, r *http.Request) {
 		RefreshToken string `json:"refresh_token"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		respondWithError(w, http.StatusBadRequest, "invalid request body")
+		common.RespondWithError(w, http.StatusBadRequest, "invalid request body")
 		return
 	}
 
@@ -126,12 +127,12 @@ func (h *HTTPHandlers) Logout(w http.ResponseWriter, r *http.Request) {
 	resp, err := h.service.Logout(ctx, req.RefreshToken)
 	if err != nil {
 		if appErr, ok := errors.IsAppError(err); ok {
-			respondWithError(w, appErr.Code, appErr.Message)
+			common.RespondWithError(w, appErr.Code, appErr.Message)
 			return
 		}
-		respondWithError(w, http.StatusInternalServerError, err.Error())
+		common.RespondWithError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
-	respondWithJSON(w, http.StatusOK, resp)
+	common.RespondWithJSON(w, http.StatusOK, resp)
 }

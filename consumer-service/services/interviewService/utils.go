@@ -4,12 +4,24 @@ import (
 	"consumer-service/common"
 	errorv2 "consumer-service/errors"
 	"consumer-service/model"
+	"consumer-service/services/authService"
+	"context"
 	"strings"
 )
 
-func getValidateGetInterviewsRequest(req GetInterviewsRequest) (GetInterviewsRequest, error) {
+func getValidateGetInterviewsRequest(ctx context.Context, req GetInterviewsRequest) (GetInterviewsRequest, error) {
 
 	req.UserID = strings.TrimSpace(req.UserID)
+
+	authenticatedUserID, ok := authService.GetAuthenticatedUserID(ctx)
+	if !ok {
+		return GetInterviewsRequest{}, errorv2.BadRequest.New("authenticated user_id not found in context")
+	}
+
+	if req.UserID != "" && req.UserID != authenticatedUserID {
+		return GetInterviewsRequest{}, errorv2.BadRequest.New("user_id does not match authenticated user")
+	}
+	req.UserID = authenticatedUserID
 
 	if err := common.ValidateUUID(req.UserID); err != nil {
 		return GetInterviewsRequest{}, errorv2.BadRequest.Wrap(err, "invalid user_id")

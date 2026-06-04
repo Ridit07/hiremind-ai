@@ -26,7 +26,6 @@ type GetUser struct {
 	Email       []string
 	UserType    UserType
 	PhoneNumber string
-	UserStatus  UserStatus
 }
 
 type UserType string

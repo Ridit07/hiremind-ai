@@ -1,10 +1,52 @@
 'use client';
 
+import React, { useState } from 'react';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
+import { useAuth } from '@/hooks/useAuth';
+import { Button } from '@/components/common/Button';
 import { fadeInUp } from '@/utils/animations';
 import { HiMail, HiLockClosed } from 'react-icons/hi';
 
-export default function Login() {
+export default function LoginPage() {
+    const router = useRouter();
+    const { login, isLoading, error, clearError } = useAuth();
+    const [formData, setFormData] = useState({
+        email: '',
+        password: '',
+    });
+    const [localError, setLocalError] = useState<string | null>(null);
+
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const { name, value } = e.target;
+        setFormData((prev) => ({
+            ...prev,
+            [name]: value,
+        }));
+    };
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setLocalError(null);
+        clearError();
+
+        if (!formData.email || !formData.password) {
+            setLocalError('Please fill in all fields');
+            return;
+        }
+
+        try {
+            await login(formData.email, formData.password);
+            router.push('/');
+        } catch (err) {
+            const errorMessage = err instanceof Error ? err.message : 'Login failed';
+            setLocalError(errorMessage);
+        }
+    };
+
+    const displayError = localError || error;
+
     return (
         <main className="min-h-screen pt-20 pb-20 bg-gradient-to-br from-blue-50 to-white">
             <div className="max-w-md w-full mx-auto px-4">
@@ -29,8 +71,17 @@ export default function Login() {
                     variants={fadeInUp}
                     transition={{ delay: 0.2 }}
                 >
-                    {/* Login Form */}
-                    <form className="space-y-6">
+                    {displayError && (
+                        <motion.div
+                            className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg"
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                        >
+                            <p className="text-red-700 text-sm">{displayError}</p>
+                        </motion.div>
+                    )}
+
+                    <form onSubmit={handleSubmit} className="space-y-6">
                         {/* Email */}
                         <motion.div
                             initial={{ opacity: 0, y: 10 }}
@@ -45,8 +96,12 @@ export default function Login() {
                                 <input
                                     id="email"
                                     type="email"
+                                    name="email"
+                                    value={formData.email}
+                                    onChange={handleChange}
                                     placeholder="you@example.com"
-                                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent"
+                                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed"
+                                    disabled={isLoading}
                                 />
                             </div>
                         </motion.div>
@@ -65,75 +120,30 @@ export default function Login() {
                                 <input
                                     id="password"
                                     type="password"
+                                    name="password"
+                                    value={formData.password}
+                                    onChange={handleChange}
                                     placeholder="••••••••"
-                                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent"
+                                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed"
+                                    disabled={isLoading}
                                 />
                             </div>
-                        </motion.div>
-
-                        {/* Remember & Forgot */}
-                        <motion.div
-                            className="flex items-center justify-between text-sm"
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            transition={{ delay: 0.5 }}
-                        >
-                            <label className="flex items-center gap-2 cursor-pointer">
-                                <input type="checkbox" className="w-4 h-4 rounded" />
-                                <span className="text-gray-600">Remember me</span>
-                            </label>
-                            <a href="#" className="text-blue-600 hover:text-blue-700 font-medium">
-                                Forgot Password?
-                            </a>
                         </motion.div>
 
                         {/* Sign In Button */}
                         <motion.button
                             type="submit"
-                            className="w-full bg-gradient-to-r from-blue-600 to-orange-500 text-white font-bold py-3 rounded-lg hover:shadow-lg transition-all duration-200"
+                            disabled={isLoading}
+                            className="w-full bg-gradient-to-r from-blue-600 to-orange-500 text-white font-bold py-3 rounded-lg hover:shadow-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
-                            transition={{ delay: 0.6 }}
-                            whileHover={{ scale: 1.02 }}
-                            whileTap={{ scale: 0.98 }}
+                            transition={{ delay: 0.5 }}
+                            whileHover={{ scale: isLoading ? 1 : 1.02 }}
+                            whileTap={{ scale: isLoading ? 1 : 0.98 }}
                         >
-                            Sign In
+                            {isLoading ? 'Signing in...' : 'Sign In'}
                         </motion.button>
                     </form>
-
-                    {/* Divider */}
-                    <motion.div
-                        className="relative my-6"
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        transition={{ delay: 0.7 }}
-                    >
-                        <div className="absolute inset-0 flex items-center">
-                            <div className="w-full border-t border-gray-300"></div>
-                        </div>
-                        <div className="relative flex justify-center text-sm">
-                            <span className="px-2 bg-white text-gray-500">Or continue with</span>
-                        </div>
-                    </motion.div>
-
-                    {/* Social Login */}
-                    <motion.div
-                        className="grid grid-cols-3 gap-3"
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        transition={{ delay: 0.8 }}
-                    >
-                        {['Google', 'GitHub', 'LinkedIn'].map((provider) => (
-                            <button
-                                key={provider}
-                                className="py-2 px-3 border border-gray-300 rounded-lg hover:border-gray-400 hover:bg-gray-50 transition-all text-sm font-medium text-gray-700"
-                            >
-                                {provider === 'Google' && '🔍'}
-                                {provider === 'GitHub' && '🐙'}
-                                {provider === 'LinkedIn' && '💼'}
-                            </button>
-                        ))}
-                    </motion.div>
                 </motion.div>
 
                 {/* Sign Up Link */}
@@ -141,13 +151,13 @@ export default function Login() {
                     className="text-center mt-8"
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
-                    transition={{ delay: 0.9 }}
+                    transition={{ delay: 0.6 }}
                 >
                     <p className="text-gray-600">
                         Don't have an account?{' '}
-                        <a href="/get-started" className="text-blue-600 hover:text-blue-700 font-bold">
+                        <Link href="/signup" className="text-blue-600 hover:text-blue-700 font-bold">
                             Sign up for free
-                        </a>
+                        </Link>
                     </p>
                 </motion.div>
 
@@ -156,7 +166,7 @@ export default function Login() {
                     className="mt-12 text-center text-sm text-gray-500"
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
-                    transition={{ delay: 1 }}
+                    transition={{ delay: 0.7 }}
                 >
                     <p>🔒 Your data is encrypted and secure. We never share your information.</p>
                 </motion.div>

@@ -29,12 +29,12 @@ func NewService(redis RedisClient, jwtSecret string) *Service {
 	}
 }
 
-func Signup(ctx context.Context, req SignupRequest) error {
+func (s *Service) Signup(ctx context.Context, req SignupRequest) (LoginResponse, error) {
 
 	err := validateSignUpRequest(req)
 
 	if err != nil {
-		return err
+		return LoginResponse{}, err
 	}
 
 	existingUser, err := model.GetUserDetails(ctx, db.ReadConnection(), model.GetUser{
@@ -42,40 +42,46 @@ func Signup(ctx context.Context, req SignupRequest) error {
 	})
 
 	if err != nil {
-		return err
+		return LoginResponse{}, err
 	}
 
-	if existingUser != nil {
-		return errors.BadRequest.New("user already exists")
+	if len(existingUser) != 0 {
+		return LoginResponse{}, errors.BadRequest.New("user already exists")
 	}
 
 	hashedPassword, err := HashPassword(req.Password)
 
 	if err != nil {
-		return err
+		return LoginResponse{}, err
 	}
 
 	now := time.Now()
 
-	err = model.CreateUser(
-		ctx,
-		db.WriteConnection(),
-		&model.User{
-			Email:        req.Email,
-			PasswordHash: hashedPassword,
-			UserType:     model.UserType(req.UserType),
-			PhoneNumber:  req.PhoneNumber,
-			UserStatus:   model.UserStatusActive,
-			CreatedAt:    now,
-			UpdatedAt:    now,
-		},
-	)
-
-	if err != nil {
-		return err
+	newUser := &model.User{
+		Email:        req.Email,
+		PasswordHash: hashedPassword,
+		UserType:     model.UserType(req.UserType),
+		PhoneNumber:  req.PhoneNumber,
+		UserStatus:   model.UserStatusActive,
+		CreatedAt:    now,
+		UpdatedAt:    now,
 	}
 
-	return nil
+	err = model.CreateUser(ctx, db.WriteConnection(), newUser)
+
+	if err != nil {
+		return LoginResponse{}, err
+	}
+
+	getAccessAndRefreshTokenResp, err := s.getAccessAndRefreshToken(ctx, newUser.UserID)
+	if err != nil {
+		return LoginResponse{}, err
+	}
+
+	return LoginResponse{
+		AccessToken:  getAccessAndRefreshTokenResp.AccessToken,
+		RefreshToken: getAccessAndRefreshTokenResp.RefreshToken,
+	}, nil
 }
 
 func (s *Service) Login(ctx context.Context, req LoginRequest) (resp LoginResponse, err error) {
@@ -97,22 +103,15 @@ func (s *Service) Login(ctx context.Context, req LoginRequest) (resp LoginRespon
 		return LoginResponse{}, errors.BadRequest.New("invalid credentials")
 	}
 
-	accessToken, err := s.GenerateJWT(user[0].UserID)
-	if err != nil {
-		return LoginResponse{}, err
-	}
-
-	refreshToken := uuid.NewString()
-
-	err = s.redis.Set(ctx, refreshToken, user[0].UserID, time.Hour*24)
+	getAccessAndRefreshTokenResp, err := s.getAccessAndRefreshToken(ctx, user[0].UserID)
 
 	if err != nil {
 		return LoginResponse{}, err
 	}
 
 	return LoginResponse{
-		AccessToken:  accessToken,
-		RefreshToken: refreshToken,
+		AccessToken:  getAccessAndRefreshTokenResp.AccessToken,
+		RefreshToken: getAccessAndRefreshTokenResp.RefreshToken,
 	}, nil
 }
 

@@ -3,12 +3,20 @@
 import Link from 'next/link';
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { HiMenu, HiX } from 'react-icons/hi';
+import { HiMenu, HiX, HiLogout } from 'react-icons/hi';
 import { Button } from './Button';
 import { NAV_LINKS, CTA_BUTTONS } from '@/constants/navigation';
+import { useAuth } from '@/hooks/useAuth';
 
 export function Navbar() {
     const [isOpen, setIsOpen] = useState(false);
+    const { isAuthenticated, logout, isLoading } = useAuth();
+
+    const handleLogout = async () => {
+        await logout();
+        setIsOpen(false);
+    };
+
     return (
         <nav className="fixed top-0 w-full bg-white/95 backdrop-blur-md shadow-md z-50">
             <div className="max-w-7xl mx-auto px-4 md:px-8 lg:px-16">
@@ -33,12 +41,25 @@ export function Navbar() {
 
                     {/* Desktop CTA Buttons */}
                     <div className="hidden md:flex items-center gap-4">
-                        <Button href={CTA_BUTTONS.secondary.href} variant="outline" size="sm">
-                            {CTA_BUTTONS.secondary.label}
-                        </Button>
-                        <Button href={CTA_BUTTONS.primary.href} variant="primary" size="sm">
-                            {CTA_BUTTONS.primary.label}
-                        </Button>
+                        {isAuthenticated ? (
+                            <button
+                                onClick={handleLogout}
+                                disabled={isLoading}
+                                className="flex items-center gap-2 px-4 py-2 text-gray-700 hover:text-red-600 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                <HiLogout className="text-lg" />
+                                {isLoading ? 'Logging out...' : 'Logout'}
+                            </button>
+                        ) : (
+                            <>
+                                <Button href={CTA_BUTTONS.secondary.href} variant="outline" size="sm">
+                                    {CTA_BUTTONS.secondary.label}
+                                </Button>
+                                <Button href={CTA_BUTTONS.primary.href} variant="primary" size="sm">
+                                    {CTA_BUTTONS.primary.label}
+                                </Button>
+                            </>
+                        )}
                     </div>
 
                     {/* Mobile Menu Button */}
@@ -68,13 +89,26 @@ export function Navbar() {
                                 {link.label}
                             </Link>
                         ))}
-                        <div className="flex gap-2 mt-4">
-                            <Button href={CTA_BUTTONS.secondary.href} variant="outline" size="sm">
-                                {CTA_BUTTONS.secondary.label}
-                            </Button>
-                            <Button href={CTA_BUTTONS.primary.href} variant="primary" size="sm">
-                                {CTA_BUTTONS.primary.label}
-                            </Button>
+                        <div className="flex gap-2 mt-4 flex-col">
+                            {isAuthenticated ? (
+                                <button
+                                    onClick={handleLogout}
+                                    disabled={isLoading}
+                                    className="flex items-center justify-center gap-2 px-4 py-2 text-white bg-red-600 hover:bg-red-700 rounded-lg transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed w-full"
+                                >
+                                    <HiLogout className="text-lg" />
+                                    {isLoading ? 'Logging out...' : 'Logout'}
+                                </button>
+                            ) : (
+                                <>
+                                    <Button href={CTA_BUTTONS.secondary.href} variant="outline" size="sm" className="w-full">
+                                        {CTA_BUTTONS.secondary.label}
+                                    </Button>
+                                    <Button href={CTA_BUTTONS.primary.href} variant="primary" size="sm" className="w-full">
+                                        {CTA_BUTTONS.primary.label}
+                                    </Button>
+                                </>
+                            )}
                         </div>
                     </motion.div>
                 )}

@@ -44,7 +44,7 @@ func (s *GatewayService) Signup(ctx context.Context, req *SignupRequest) (*Signu
 	}
 
 	if protoResp == nil {
-		return nil, errors.Internal.New("received nil response from auth service")
+		return nil, errors.Internal.New("received nil response from auth service for signup")
 	}
 
 	if protoResp.Error != nil {
@@ -53,7 +53,9 @@ func (s *GatewayService) Signup(ctx context.Context, req *SignupRequest) (*Signu
 	}
 
 	return &SignupResponse{
-		Message: protoResp.Message,
+		AccessToken:  protoResp.AccessToken,
+		RefreshToken: protoResp.RefreshToken,
+		Message:      protoResp.Message,
 	}, nil
 }
 
@@ -115,7 +117,7 @@ func (s *GatewayService) RefreshToken(ctx context.Context, refreshToken string) 
 
 func (s *GatewayService) Logout(ctx context.Context, refreshToken string) (*LogoutResponse, error) {
 	if strings.TrimSpace(refreshToken) == "" {
-		return nil, errors.BadRequest.New("refresh token cannot be empty")
+		return nil, errors.BadRequest.New("refresh token cannot be empty to logout")
 	}
 
 	protoResp, err := s.authClient.Logout(ctx, &pb.LogoutRequest{

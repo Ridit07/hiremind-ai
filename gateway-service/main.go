@@ -6,7 +6,8 @@ import (
 	"net/http"
 
 	"gateway-service/config"
-	server "gateway-service/server/authserver"
+	authserver "gateway-service/server/authserver"
+	interviewserver "gateway-service/server/interviewserver"
 	transport "gateway-service/transport"
 
 	"google.golang.org/grpc"
@@ -23,10 +24,20 @@ func main() {
 		log.Fatalf("failed to connect to auth service: %v", err)
 	}
 	defer authConn.Close()
+	// why insecure
+	interviewConn, err := grpc.Dial(
+		cfg.InterviewServiceAddr,
+		grpc.WithInsecure(),
+	)
+	if err != nil {
+		log.Fatalf("failed to connect to interview service: %v", err)
+	}
+	defer interviewConn.Close()
 
-	svc := server.NewGatewayService(authConn)
+	authSvc := authserver.NewGatewayService(authConn)
+	interviewSvc := interviewserver.NewInterviewService(interviewConn)
 
-	router := transport.SetupRoutes(svc)
+	router := transport.SetupRoutes(authSvc, interviewSvc)
 
 	httpAddr := fmt.Sprintf(":%s", cfg.HTTPPort)
 	log.Printf("Starting HTTP server on %s", httpAddr)

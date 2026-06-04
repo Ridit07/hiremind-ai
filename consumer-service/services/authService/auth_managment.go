@@ -58,6 +58,20 @@ func AuthInterceptor(svc *Service) grpc.UnaryServerInterceptor {
 	}
 }
 
+func GetAuthenticatedUserID(ctx context.Context) (string, bool) {
+	userID, ok := ctx.Value(userIDKey).(string)
+	if !ok {
+		return "", false
+	}
+
+	userID = strings.TrimSpace(userID)
+	if userID == "" {
+		return "", false
+	}
+
+	return userID, true
+}
+
 func RateLimitInterceptor(redis *redis.Client) grpc.UnaryServerInterceptor {
 	return func(ctx context.Context, req interface{},
 		info *grpc.UnaryServerInfo, handler grpc.UnaryHandler,
