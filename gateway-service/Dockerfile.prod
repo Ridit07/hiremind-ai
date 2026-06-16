@@ -30,7 +30,9 @@ RUN go mod download
 COPY . .
 
 # Build with optimizations
-RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build \
+ARG TARGETARCH
+
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=$TARGETARCH go build \
     -a \
     -installsuffix cgo \
     -ldflags="-w -s -X main.Version=${VERSION} -X main.BuildTime=${BUILD_TIME} -X main.GitCommit=${GIT_COMMIT}" \
@@ -62,8 +64,8 @@ LABEL org.opencontainers.image.description="HTTP API gateway for interview and a
 LABEL org.opencontainers.image.version="${VERSION}"
 
 # Health check against the HTTP /health endpoint
-HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
-    CMD curl -f http://localhost:8080/health || exit 1
+# HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+#     CMD curl -f http://localhost:8080/health || exit 1
 
 # Run the application
 CMD ["./gateway-service"]
