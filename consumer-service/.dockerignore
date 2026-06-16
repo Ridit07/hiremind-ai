@@ -1,0 +1,64 @@
+# Git files
+.git
+.gitignore
+.gitattributes
+
+# IDEs and Editors
+.vscode
+.idea
+*.swp
+*.swo
+*~
+.DS_Store
+.env.local
+.env.*.local
+
+# Build and test artifacts
+.bin
+*.o
+*.a
+*.so
+*.exe
+*.test
+coverage.out
+*.coverprofile
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# Docker files
+Dockerfile
+Dockerfile.*
+docker-compose*.yml
+.dockerignore
+.docker
+
+# CI/CD
+.github
+.gitlab-ci.yml
+.circleci
+
+# Documentation
+*.md
+docs/
+README.md
+
+# Development files
+Makefile
+makefile
+scripts/
+*.sh
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# Logs
+*.log
+logs/
+
+# OS files
+Thumbs.db

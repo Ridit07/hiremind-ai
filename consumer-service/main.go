@@ -3,7 +3,6 @@ package main
 import (
 	"log"
 	"net"
-	"os"
 
 	"consumer-service/config"
 	"consumer-service/db"
@@ -23,11 +22,14 @@ import (
 
 func main() {
 
-	config.LoadConfig()
+	cfg, err := config.LoadConfig()
+	if err != nil {
+		log.Fatalf("Failed to load config: %v", err)
+	}
 
-	err := db.InitDB(
-		config.AppConfig.DBReadURL,
-		config.AppConfig.DBWriteURL,
+	err = db.InitDB(
+		cfg.DBReadURL,
+		cfg.DBWriteURL,
 	)
 
 	if err != nil {
@@ -35,12 +37,12 @@ func main() {
 	}
 
 	rdb := redis.NewClient(&redis.Options{
-		Addr: os.Getenv("REDIS_ADDR"),
+		Addr: cfg.RedisAddr,
 	})
 
 	redisWrapper := redisclient.NewClient(rdb)
 
-	jwtSecret := os.Getenv("JWT_SECRET")
+	jwtSecret := cfg.JWTSecret
 	if jwtSecret == "" {
 		log.Fatal("JWT_SECRET not set")
 	}

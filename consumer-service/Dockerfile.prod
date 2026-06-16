@@ -1,0 +1,60 @@
+# Stage 1: Builder
+FROM golang:1.26-alpine AS builder
+
+ARG VERSION=dev
+ARG BUILD_TIME
+ARG GIT_COMMIT
+
+# Install build dependencies
+RUN apk add --no-cache git ca-certificates tzdata make
+
+WORKDIR /app
+
+# Copy go mod files
+COPY go.mod go.sum ./
+
+# Download dependencies (cached layer)
+RUN go mod download
+
+# Copy source code
+COPY . .
+
+# Build with optimizations
+ARG TARGETARCH
+
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=$TARGETARCH go build \
+    -a \
+    -installsuffix cgo \
+    -o consumer-service .
+
+# Stage 2: Runtime
+FROM alpine:3.18
+
+# Install minimal runtime dependencies
+RUN apk --no-cache add ca-certificates tzdata curl
+
+# Create non-root user for security
+RUN addgroup -g 1000 appuser && \
+    adduser -D -u 1000 -G appuser appuser
+
+WORKDIR /home/appuser
+
+# Copy binary from builder
+COPY --from=builder --chown=appuser:appuser /app/consumer-service .
+
+# Copy any config files if needed
+# COPY --from=builder --chown=appuser:appuser /app/config ./config
+
+USER appuser
+
+# Expose gRPC port
+EXPOSE 50051
+
+# Metadata
+LABEL org.opencontainers.image.title="HireMind Consumer Service"
+LABEL org.opencontainers.image.description="gRPC service for interview management"
+LABEL org.opencontainers.image.version="${VERSION}"
+
+
+# Run the application
+CMD ["./consumer-service"]

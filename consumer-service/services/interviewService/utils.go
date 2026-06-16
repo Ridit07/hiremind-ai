@@ -21,7 +21,7 @@ func getValidateGetInterviewsRequest(ctx context.Context, req GetInterviewsReque
 	if req.UserID != "" && req.UserID != authenticatedUserID {
 		return GetInterviewsRequest{}, errorv2.BadRequest.New("user_id does not match authenticated user")
 	}
-	req.UserID = authenticatedUserID
+	req.UserID = authenticatedUserID // user from request to be fixed
 
 	if err := common.ValidateUUID(req.UserID); err != nil {
 		return GetInterviewsRequest{}, errorv2.BadRequest.Wrap(err, "invalid user_id")

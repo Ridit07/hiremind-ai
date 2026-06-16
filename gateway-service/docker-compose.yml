@@ -1,0 +1,29 @@
+services:
+  gateway-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        SSH_PRIVATE_KEY: ${SSH_PRIVATE_KEY}
+    container_name: hiremind-gateway-service
+    volumes:
+      - ./.env:/.env:ro
+    env_file:
+      - .env
+    ports:
+      - "8080:8080"
+    networks:
+      - hiremind-network
+    restart: unless-stopped
+    healthcheck:
+      test: [ "CMD", "nc", "-z", "localhost", "8080" ]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+
+networks:
+  # Join the network created by the consumer-service compose project so that
+  # the gateway can resolve "consumer-service" via Docker DNS.
+  hiremind-network:
+    external: true
+    name: consumer-service_hiremind-network
