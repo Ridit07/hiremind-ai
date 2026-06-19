@@ -38,6 +38,7 @@ func SetupRoutes(authSvc authserver.GatewayServiceInterface, interviewSvc interv
 		r.Get("/", interviewHandlers.GetInterviews)
 	})
 
+	//problem in aws
 	router.Get("/health", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
