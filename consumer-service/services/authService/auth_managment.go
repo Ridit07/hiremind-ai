@@ -81,6 +81,7 @@ func RateLimitInterceptor(redis *redis.Client) grpc.UnaryServerInterceptor {
 
 		count, err := redis.Incr(ctx, key).Result()
 		if err != nil {
+			log.Printf("Redis error: %v", err)
 			return nil, status.Error(codes.Internal, "rate limit error")
 		}
 

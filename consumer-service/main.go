@@ -1,6 +1,8 @@
 package main
 
 import (
+	"context"
+	"crypto/tls"
 	"log"
 	"net"
 
@@ -38,9 +40,21 @@ func main() {
 
 	rdb := redis.NewClient(&redis.Options{
 		Addr: cfg.RedisAddr,
+		TLSConfig: &tls.Config{
+			MinVersion: tls.VersionTLS12,
+		},
 	})
 
 	redisWrapper := redisclient.NewClient(rdb)
+
+	ctx := context.Background()
+
+	pong, err := rdb.Ping(ctx).Result()
+	if err != nil {
+		log.Fatalf("REDIS PING FAILED: %v", err)
+	}
+
+	log.Printf("REDIS CONNECTED: %s", pong)
 
 	jwtSecret := cfg.JWTSecret
 	if jwtSecret == "" {
