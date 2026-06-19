@@ -24,7 +24,7 @@ func main() {
 		log.Fatalf("failed to connect to auth service: %v", err)
 	}
 	defer authConn.Close()
-	// why insecure
+	// why insecure is it because we are in a local environment and not using TLS? In production, we should use TLS for secure communication between services. For local development, we can skip TLS to simplify setup.
 	interviewConn, err := grpc.Dial(
 		cfg.InterviewServiceAddr,
 		grpc.WithInsecure(),
