@@ -32,6 +32,8 @@ COPY . .
 # Build with optimizations
 ARG TARGETARCH
 
+RUN echo "TARGETARCH=$TARGETARCH"
+
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=$TARGETARCH go build \
     -a \
     -installsuffix cgo \
