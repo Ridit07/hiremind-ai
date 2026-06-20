@@ -21,12 +21,7 @@ phases:
 
       # - docker tag hiremind-gateway-service:latest $REPOSITORY_URI:$IMAGE_TAG
      # - docker tag hiremind-gateway-service:latest $REPOSITORY_URI:latest
-      - docker buildx build \
-          --platform linux/arm64 \
-          -t $REPOSITORY_URI:$IMAGE_TAG \
-          -t $REPOSITORY_URI:latest \
-          --push \
-          ./gateway-service
+      - docker buildx build --platform linux/arm64 -t $REPOSITORY_URI:$IMAGE_TAG -t $REPOSITORY_URI:latest --push ./gateway-service
 
   post_build:
     commands:
