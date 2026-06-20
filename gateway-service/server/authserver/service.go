@@ -61,7 +61,7 @@ func (s *GatewayService) Signup(ctx context.Context, req *SignupRequest) (*Signu
 
 func (s *GatewayService) Login(ctx context.Context, req *LoginRequest) (*LoginResponse, error) {
 	if req == nil {
-		return nil, errors.Internal.New("login request cannot be nil")
+		return nil, errors.Internal.New("login request cannot be nil for login")
 	}
 
 	if err := req.Validate(); err != nil {

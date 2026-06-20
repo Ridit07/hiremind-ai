@@ -15,16 +15,24 @@ phases:
   build:
     commands:
       - echo Building Docker image...
-      - docker build -t hiremind-gateway-service ./gateway-service
+     # - docker build -t hiremind-gateway-service ./gateway-service
+      - docker buildx create --use
 
-      - docker tag hiremind-gateway-service:latest $REPOSITORY_URI:$IMAGE_TAG
-      - docker tag hiremind-gateway-service:latest $REPOSITORY_URI:latest
+
+      # - docker tag hiremind-gateway-service:latest $REPOSITORY_URI:$IMAGE_TAG
+     # - docker tag hiremind-gateway-service:latest $REPOSITORY_URI:latest
+      - docker buildx build \
+          --platform linux/arm64 \
+          -t $REPOSITORY_URI:$IMAGE_TAG \
+          -t $REPOSITORY_URI:latest \
+          --push \
+          ./gateway-service
 
   post_build:
     commands:
       - echo Pushing Docker image...
-      - docker push $REPOSITORY_URI:$IMAGE_TAG
-      - docker push $REPOSITORY_URI:latest
+      # - docker push $REPOSITORY_URI:$IMAGE_TAG
+      # - docker push $REPOSITORY_URI:latest
 
       - printf '[{"name":"Hiremind-Gateway-Service-Container","imageUri":"%s"}]' $REPOSITORY_URI:$IMAGE_TAG > imagedefinitions.json
 
