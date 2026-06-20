@@ -41,7 +41,7 @@ func (s *Service) GetInterviews(ctx context.Context, req GetInterviewsRequest) (
 	if err != nil {
 		return GetInterviewsResponse{}, err
 	}
-
+	//nhjubhjb
 	return GetInterviewsResponse{
 		Interviews: mapGetUserDetailsRespToGetInterviews(users, interviews),
 	}, nil

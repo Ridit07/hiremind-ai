@@ -30,7 +30,7 @@ phases:
     commands:
       - echo Pushing Docker image...
 
-      - printf '[{"name":"Hiremind-Consumer-Service-Container","imageUri":"%s"}]' $REPOSITORY_URI:$IMAGE_TAG > imagedefinitions.json
+      - printf '[{"name":"Consumer-Service","imageUri":"%s"}]' $REPOSITORY_URI:$IMAGE_TAG > imagedefinitions.json
 
 artifacts:
   files:
