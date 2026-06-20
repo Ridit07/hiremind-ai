@@ -90,7 +90,7 @@ func (s *GatewayService) Login(ctx context.Context, req *LoginRequest) (*LoginRe
 
 func (s *GatewayService) RefreshToken(ctx context.Context, refreshToken string) (*RefreshTokenResponse, error) {
 	if strings.TrimSpace(refreshToken) == "" {
-		return nil, errors.BadRequest.New("refresh token cannot be empty")
+		return nil, errors.BadRequest.New("refresh token cannot be empty for refresh token")
 	}
 
 	protoResp, err := s.authClient.RefreshToken(ctx, &pb.RefreshTokenRequest{
