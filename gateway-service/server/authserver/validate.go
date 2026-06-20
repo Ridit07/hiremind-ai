@@ -7,15 +7,15 @@ import (
 
 func (r *SignupRequest) Validate() error {
 	if strings.TrimSpace(r.Email) == "" {
-		return fmt.Errorf("email is required")
+		return fmt.Errorf("email is required for signup")
 	}
 
 	if len(strings.TrimSpace(r.Password)) < 8 {
-		return fmt.Errorf("password must be at least 8 characters")
+		return fmt.Errorf("password must be at least 8 characters for signup")
 	}
 
 	if strings.TrimSpace(r.UserType) == "" {
-		return fmt.Errorf("user_type is required")
+		return fmt.Errorf("user_type is required for signup")
 	}
 
 	if r.UserType != "CANDIDATE" && r.UserType != "HR" {
