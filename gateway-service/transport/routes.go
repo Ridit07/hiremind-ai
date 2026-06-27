@@ -36,6 +36,7 @@ func SetupRoutes(authSvc authserver.GatewayServiceInterface, interviewSvc interv
 	router.Route("/api/v1/interviews", func(r chi.Router) {
 		r.Use(common.AuthMiddleware)
 		r.Get("/", interviewHandlers.GetInterviews)
+		r.Post("/draft", interviewHandlers.CreateInterviewDraft)
 	})
 
 	//problem in aws
