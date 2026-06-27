@@ -2,16 +2,25 @@ package interviewService
 
 import (
 	"context"
+	"log"
+	"time"
 
 	"consumer-service/db"
 	"consumer-service/model"
 )
 
-type Service struct {
+type RedisClient interface {
+	Set(ctx context.Context, key string, value interface{}, expiration time.Duration) error
+	Get(ctx context.Context, key string) (string, error)
+	Delete(ctx context.Context, key string) error
 }
 
-func NewService() *Service {
-	return &Service{}
+type Service struct {
+	redis RedisClient
+}
+
+func NewService(redis RedisClient) *Service {
+	return &Service{redis: redis}
 }
 
 func (s *Service) GetInterviews(ctx context.Context, req GetInterviewsRequest) (resp GetInterviewsResponse, err error) {
@@ -41,8 +50,44 @@ func (s *Service) GetInterviews(ctx context.Context, req GetInterviewsRequest) (
 	if err != nil {
 		return GetInterviewsResponse{}, err
 	}
-	//nhjubhjb
+
 	return GetInterviewsResponse{
 		Interviews: mapGetUserDetailsRespToGetInterviews(users, interviews),
+	}, nil
+}
+
+func (s *Service) CreateInterviewDraft(ctx context.Context, req CreateInterviewDraftRequest) (CreateInterviewDraftResponse, error) {
+
+	hrID, err := validateCreateInterviewDraftRequest(ctx, &req)
+	if err != nil {
+		return CreateInterviewDraftResponse{}, err
+	}
+
+	now := time.Now()
+
+	draft, found, err := s.getDraftForCreateInterviewDraft(ctx, hrID)
+	if err != nil {
+		// to raise notice error
+		log.Printf("Error retrieving draft for HR ID %s: %v", hrID, err)
+	}
+
+	if !found {
+		draft = InterviewDraft{
+			HrID:      hrID,
+			CreatedAt: now,
+		}
+	}
+
+	draft.Role = req.Role
+	draft.Company = req.Company
+	draft.Level = req.Level
+	draft.UpdatedAt = now
+
+	if err := s.saveDraftForCreateInterviewDraft(ctx, draft, draftTTL); err != nil {
+		return CreateInterviewDraftResponse{}, err
+	}
+
+	return CreateInterviewDraftResponse{
+		ExpiresAt: now.Add(draftTTL),
 	}, nil
 }
