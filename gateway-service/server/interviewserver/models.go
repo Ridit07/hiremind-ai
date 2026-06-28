@@ -18,3 +18,13 @@ type InterviewData struct {
 	CreatedAt           time.Time `json:"created_at"`
 	UpdatedAt           time.Time `json:"updated_at"`
 }
+
+type CreateInterviewDraftRequest struct {
+	Role    string `json:"role"`
+	Company string `json:"company"`
+	Level   string `json:"level"`
+}
+
+type CreateInterviewDraftResponse struct {
+	ExpiresAt time.Time `json:"expires_at"`
+}

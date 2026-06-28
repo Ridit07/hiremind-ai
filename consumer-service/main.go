@@ -62,7 +62,7 @@ func main() {
 	}
 
 	authSvc := authService.NewService(redisWrapper, jwtSecret)
-	interviewSvc := interviewService.NewService()
+	interviewSvc := interviewService.NewService(redisWrapper)
 
 	grpcServer := grpc.NewServer(
 		grpc.ChainUnaryInterceptor(

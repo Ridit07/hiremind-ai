@@ -8,6 +8,7 @@ import (
 	errormapper "consumer-service/transport_grpc/common"
 
 	pb "github.com/Ridit07/hiremind-proto-contracts/generated/interview"
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 type InterviewServer struct {
@@ -35,5 +36,23 @@ func (s *InterviewServer) GetInterviews(
 
 	return &pb.GetInterviewsResponse{
 		Interviews: interviews,
+	}, nil
+}
+
+func (s *InterviewServer) CreateInterviewDraft(
+	ctx context.Context,
+	req *pb.CreateInterviewDraftRequest,
+) (*pb.CreateInterviewDraftResponse, error) {
+
+	resp, err := s.Service.CreateInterviewDraft(ctx, mapCreateInterviewDraftRequestToService(req))
+
+	if err != nil {
+		return &pb.CreateInterviewDraftResponse{
+			Error: errormapper.ToProtoError(err),
+		}, nil
+	}
+
+	return &pb.CreateInterviewDraftResponse{
+		ExpiresAt: timestamppb.New(resp.ExpiresAt),
 	}, nil
 }
