@@ -126,8 +126,8 @@ func validateCreateInterviewDraftRequest(ctx context.Context, req *CreateIntervi
 		req.CandidateEmail = strings.TrimSpace(req.CandidateEmail)
 		req.CandidatePhoneNumber = strings.TrimSpace(req.CandidatePhoneNumber)
 
-		if req.InterviewDatetime == nil {
-			return "", errorv2.BadRequest.New("missing interview_datetime")
+		if req.InterviewDatetime == nil || req.InterviewDatetime.IsZero() || req.InterviewDatetime.Before(time.Now()) {
+			return "", errorv2.BadRequest.New("invalid interview_datetime")
 		}
 		if !isValidEmail(req.CandidateEmail) {
 			return "", errorv2.BadRequest.New("invalid or missing candidate email")
