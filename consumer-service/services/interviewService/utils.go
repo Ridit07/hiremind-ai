@@ -216,3 +216,17 @@ func (s *Service) saveDraftForCreateInterviewDraft(ctx context.Context, draft In
 
 	return nil
 }
+
+func validateGetInterviewDraftRequest(ctx context.Context) (string, error) {
+
+	hrID, ok := authService.GetAuthenticatedUserID(ctx)
+	if !ok {
+		return "", errorv2.BadRequest.New("authenticated user_id not found in context")
+	}
+
+	if err := common.ValidateUUID(hrID); err != nil {
+		return "", errorv2.BadRequest.Wrap(err, "invalid hr_id format")
+	}
+
+	return hrID, nil
+}
