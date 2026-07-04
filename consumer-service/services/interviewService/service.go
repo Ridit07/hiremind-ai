@@ -78,9 +78,36 @@ func (s *Service) CreateInterviewDraft(ctx context.Context, req CreateInterviewD
 		}
 	}
 
-	draft.Role = req.Role
-	draft.Company = req.Company
-	draft.Level = req.Level
+	switch req.Step {
+	case DraftStepBasic:
+		draft.Role = req.Role
+		draft.Company = req.Company
+		draft.Level = req.Level
+		draft.Type = req.Type
+		draft.Skills = req.Skills
+
+	case DraftStepCoding:
+		draft.CodingEnabled = req.CodingEnabled
+		if !req.CodingEnabled {
+			draft.NumQuestions = 0
+			draft.Difficulty = nil
+			draft.Topics = nil
+			draft.Language = ""
+			break
+		}
+
+		draft.NumQuestions = req.NumQuestions
+		draft.Difficulty = req.Difficulty
+		draft.Topics = req.Topics
+		draft.Language = req.Language
+
+	case DraftStepSchedule:
+		draft.InterviewDatetime = req.InterviewDatetime
+		draft.CandidateEmail = req.CandidateEmail
+		draft.CandidatePassword = req.CandidatePassword
+		draft.CandidatePhoneNumber = req.CandidatePhoneNumber
+	}
+
 	draft.UpdatedAt = now
 
 	if err := s.saveDraftForCreateInterviewDraft(ctx, draft, draftTTL); err != nil {

@@ -98,17 +98,57 @@ func validateCreateInterviewDraftRequest(ctx context.Context, req *CreateIntervi
 		return "", errorv2.BadRequest.Wrap(err, "invalid hr_id format")
 	}
 
-	req.Company = strings.TrimSpace(req.Company)
+	switch req.Step {
+	case DraftStepBasic:
+		req.Company = strings.TrimSpace(req.Company)
 
-	if !req.Role.IsValid() {
-		return "", errorv2.BadRequest.New("invalid or missing role")
-	}
+		if !req.Role.IsValid() {
+			return "", errorv2.BadRequest.New("invalid or missing role")
+		}
+		if !req.Level.IsValid() {
+			return "", errorv2.BadRequest.New("invalid or missing level")
+		}
+		if !req.Type.IsValid() {
+			return "", errorv2.BadRequest.New("invalid or missing type")
+		}
 
-	if !req.Level.IsValid() {
-		return "", errorv2.BadRequest.New("invalid or missing level")
+	case DraftStepCoding:
+		if req.CodingEnabled {
+			if req.NumQuestions <= 0 {
+				return "", errorv2.BadRequest.New("num_questions must be greater than 0 when coding is enabled")
+			}
+			if !req.Language.IsValid() {
+				return "", errorv2.BadRequest.New("invalid or missing language")
+			}
+		}
+
+	case DraftStepSchedule:
+		req.CandidateEmail = strings.TrimSpace(req.CandidateEmail)
+		req.CandidatePhoneNumber = strings.TrimSpace(req.CandidatePhoneNumber)
+
+		if req.InterviewDatetime == nil || req.InterviewDatetime.IsZero() || req.InterviewDatetime.Before(time.Now()) {
+			return "", errorv2.BadRequest.New("invalid interview_datetime")
+		}
+		if !isValidEmail(req.CandidateEmail) {
+			return "", errorv2.BadRequest.New("invalid or missing candidate email")
+		}
+		if strings.TrimSpace(req.CandidatePassword) == "" {
+			return "", errorv2.BadRequest.New("missing candidate password")
+		}
+
+	default:
+		return "", errorv2.BadRequest.New("invalid or missing step")
 	}
 
 	return hrID, nil
+}
+
+func isValidEmail(email string) bool {
+	at := strings.Index(email, "@")
+	if at <= 0 || at == len(email)-1 {
+		return false
+	}
+	return strings.Contains(email[at+1:], ".")
 }
 
 func draftKey(hrID string) string {
@@ -126,6 +166,22 @@ func (r Role) IsValid() bool {
 func (l Level) IsValid() bool {
 	switch l {
 	case LevelJunior, LevelMid, LevelSenior:
+		return true
+	}
+	return false
+}
+
+func (t InterviewType) IsValid() bool {
+	switch t {
+	case InterviewTypeTechnical, InterviewTypeBehavioral, InterviewTypeSystemDesign:
+		return true
+	}
+	return false
+}
+
+func (l Language) IsValid() bool {
+	switch l {
+	case LanguagePython, LanguageJava, LanguageCPP, LanguageJavaScript:
 		return true
 	}
 	return false
