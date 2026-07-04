@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"crypto/tls"
 	"log"
 	"net"
 
@@ -39,9 +40,9 @@ func main() {
 
 	rdb := redis.NewClient(&redis.Options{
 		Addr: cfg.RedisAddr,
-		// TLSConfig: &tls.Config{
-		// 	MinVersion: tls.VersionTLS12,
-		// },
+		TLSConfig: &tls.Config{
+			MinVersion: tls.VersionTLS12,
+		},
 	})
 
 	redisWrapper := redisclient.NewClient(rdb)
