@@ -89,6 +89,10 @@ func (s *Service) CreateInterviewDraft(ctx context.Context, req CreateInterviewD
 	case DraftStepCoding:
 		draft.CodingEnabled = req.CodingEnabled
 		if !req.CodingEnabled {
+			draft.NumQuestions = 0
+			draft.Difficulty = nil
+			draft.Topics = nil
+			draft.Language = ""
 			break
 		}
 
