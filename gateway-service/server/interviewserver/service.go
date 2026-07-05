@@ -119,7 +119,8 @@ func (s *InterviewService) GetInterviewDraft(ctx context.Context) (*GetInterview
 		Draft: mapDraftToResponse(protoResp),
 	}
 	if protoResp.UpdatedAt != nil {
-		resp.UpdatedAt = protoResp.UpdatedAt.AsTime()
+		t := protoResp.UpdatedAt.AsTime()
+		resp.UpdatedAt = &t
 	}
 
 	return resp, nil
