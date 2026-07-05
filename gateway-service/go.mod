@@ -3,7 +3,7 @@ module gateway-service
 go 1.26.2
 
 require (
-	github.com/Ridit07/hiremind-proto-contracts v1.0.6
+	github.com/Ridit07/hiremind-proto-contracts v1.0.8
 	github.com/go-chi/chi/v5 v5.0.11
 	google.golang.org/grpc v1.81.0
 )

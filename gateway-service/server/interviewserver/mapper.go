@@ -83,3 +83,90 @@ func mapLevelToProto(level string) interviewpb.Level {
 		return interviewpb.Level_LEVEL_UNSPECIFIED
 	}
 }
+
+func mapDraftToResponse(protoResp *interviewpb.GetInterviewDraftResponse) *InterviewDraftData {
+	if protoResp == nil || protoResp.Draft == nil {
+		return nil
+	}
+
+	d := protoResp.Draft
+	draft := &InterviewDraftData{
+		Role:    mapRoleToString(d.Role),
+		Company: d.Company,
+		Level:   mapLevelToString(d.Level),
+		Type:    mapTypeToString(d.Type),
+		Skills:  d.Skills,
+
+		CodingEnabled: d.CodingEnabled,
+		NumQuestions:  d.NumQuestions,
+		Difficulty:    d.Difficulty,
+		Topics:        d.Topics,
+		Language:      mapLanguageToString(d.Language),
+
+		CandidateEmail:       d.CandidateEmail,
+		CandidatePhoneNumber: d.CandidatePhoneNumber,
+	}
+
+	if d.InterviewDatetime != nil {
+		t := d.InterviewDatetime.AsTime()
+		draft.InterviewDatetime = &t
+	}
+
+	return draft
+}
+
+func mapRoleToString(role interviewpb.Role) string {
+	switch role {
+	case interviewpb.Role_ROLE_BACKEND_ENGINEER:
+		return "Backend Engineer"
+	case interviewpb.Role_ROLE_FRONTEND_ENGINEER:
+		return "Frontend Engineer"
+	case interviewpb.Role_ROLE_FULL_STACK_ENGINEER:
+		return "Full Stack Engineer"
+	case interviewpb.Role_ROLE_DATA_ENGINEER:
+		return "Data Engineer"
+	default:
+		return ""
+	}
+}
+
+func mapLevelToString(level interviewpb.Level) string {
+	switch level {
+	case interviewpb.Level_LEVEL_JUNIOR:
+		return "Junior"
+	case interviewpb.Level_LEVEL_MID:
+		return "Mid"
+	case interviewpb.Level_LEVEL_SENIOR:
+		return "Senior"
+	default:
+		return ""
+	}
+}
+
+func mapTypeToString(t interviewpb.InterviewType) string {
+	switch t {
+	case interviewpb.InterviewType_INTERVIEW_TYPE_TECHNICAL:
+		return "Technical"
+	case interviewpb.InterviewType_INTERVIEW_TYPE_BEHAVIORAL:
+		return "Behavioral"
+	case interviewpb.InterviewType_INTERVIEW_TYPE_SYSTEM_DESIGN:
+		return "System Design"
+	default:
+		return ""
+	}
+}
+
+func mapLanguageToString(l interviewpb.Language) string {
+	switch l {
+	case interviewpb.Language_LANGUAGE_PYTHON:
+		return "Python"
+	case interviewpb.Language_LANGUAGE_JAVA:
+		return "Java"
+	case interviewpb.Language_LANGUAGE_CPP:
+		return "C++"
+	case interviewpb.Language_LANGUAGE_JAVASCRIPT:
+		return "JavaScript"
+	default:
+		return ""
+	}
+}
