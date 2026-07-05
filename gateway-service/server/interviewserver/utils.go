@@ -72,13 +72,14 @@ func buildCreateDraftProtoRequest(req *CreateInterviewDraftRequest) (*interviewp
 		if email == "" {
 			return nil, errors.BadRequest.New("missing candidate email")
 		}
-		if strings.TrimSpace(req.CandidatePassword) == "" {
+		password := strings.TrimSpace(req.CandidatePassword)
+		if password == "" {
 			return nil, errors.BadRequest.New("missing candidate password")
 		}
 
 		out.InterviewDatetime = timestamppb.New(*req.InterviewDatetime)
 		out.CandidateEmail = email
-		out.CandidatePassword = req.CandidatePassword
+		out.CandidatePassword = password
 		out.CandidatePhoneNumber = strings.TrimSpace(req.CandidatePhoneNumber)
 
 	default:
