@@ -32,7 +32,7 @@ type CreateInterviewDraftResponse struct {
 type GetInterviewDraftResponse struct {
 	Found     bool                `json:"found"`
 	Draft     *InterviewDraftData `json:"draft,omitempty"`
-	UpdatedAt time.Time           `json:"updated_at"`
+	UpdatedAt *time.Time          `json:"updated_at,omitempty"`
 }
 
 type InterviewDraftData struct {
