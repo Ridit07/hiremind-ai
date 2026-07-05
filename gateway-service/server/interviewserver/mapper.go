@@ -84,6 +84,34 @@ func mapLevelToProto(level string) interviewpb.Level {
 	}
 }
 
+func mapTypeToProto(t string) interviewpb.InterviewType {
+	switch normalizeEnumKey(t) {
+	case "technical", "interview type technical":
+		return interviewpb.InterviewType_INTERVIEW_TYPE_TECHNICAL
+	case "behavioral", "interview type behavioral":
+		return interviewpb.InterviewType_INTERVIEW_TYPE_BEHAVIORAL
+	case "system design", "interview type system design":
+		return interviewpb.InterviewType_INTERVIEW_TYPE_SYSTEM_DESIGN
+	default:
+		return interviewpb.InterviewType_INTERVIEW_TYPE_UNSPECIFIED
+	}
+}
+
+func mapLanguageToProto(l string) interviewpb.Language {
+	switch normalizeEnumKey(l) {
+	case "python", "language python":
+		return interviewpb.Language_LANGUAGE_PYTHON
+	case "java", "language java":
+		return interviewpb.Language_LANGUAGE_JAVA
+	case "c++", "cpp", "language cpp":
+		return interviewpb.Language_LANGUAGE_CPP
+	case "javascript", "language javascript":
+		return interviewpb.Language_LANGUAGE_JAVASCRIPT
+	default:
+		return interviewpb.Language_LANGUAGE_UNSPECIFIED
+	}
+}
+
 func mapDraftToResponse(protoResp *interviewpb.GetInterviewDraftResponse) *InterviewDraftData {
 	if protoResp == nil || protoResp.Draft == nil {
 		return nil

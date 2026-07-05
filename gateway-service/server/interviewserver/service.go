@@ -61,23 +61,14 @@ func (s *InterviewService) CreateInterviewDraft(ctx context.Context, req *Create
 		return nil, errors.BadRequest.New("request cannot be empty")
 	}
 
-	protoRole := mapRoleToProto(req.Role)
-	if protoRole == interviewpb.Role_ROLE_UNSPECIFIED {
-		return nil, errors.BadRequest.New("invalid or missing role")
-	}
-
-	protoLevel := mapLevelToProto(req.Level)
-	if protoLevel == interviewpb.Level_LEVEL_UNSPECIFIED {
-		return nil, errors.BadRequest.New("invalid or missing level")
+	protoReq, err := buildCreateDraftProtoRequest(req)
+	if err != nil {
+		return nil, err
 	}
 
 	ctx = addAuthTokenToContext(ctx)
 
-	protoResp, err := s.interviewClient.CreateInterviewDraft(ctx, &interviewpb.CreateInterviewDraftRequest{
-		Role:    protoRole,
-		Company: strings.TrimSpace(req.Company),
-		Level:   protoLevel,
-	})
+	protoResp, err := s.interviewClient.CreateInterviewDraft(ctx, protoReq)
 	if err != nil {
 		return nil, err
 	}
@@ -119,7 +110,8 @@ func (s *InterviewService) GetInterviewDraft(ctx context.Context) (*GetInterview
 		Draft: mapDraftToResponse(protoResp),
 	}
 	if protoResp.UpdatedAt != nil {
-		resp.UpdatedAt = protoResp.UpdatedAt.AsTime()
+		t := protoResp.UpdatedAt.AsTime()
+		resp.UpdatedAt = &t
 	}
 
 	return resp, nil
