@@ -13,6 +13,7 @@ import (
 type InterviewServiceInterface interface {
 	GetInterviews(ctx context.Context, userID string) (*GetInterviewsResponse, error)
 	CreateInterviewDraft(ctx context.Context, req *CreateInterviewDraftRequest) (*CreateInterviewDraftResponse, error)
+	GetInterviewDraft(ctx context.Context) (*GetInterviewDraftResponse, error)
 }
 
 type InterviewService struct {
@@ -92,6 +93,33 @@ func (s *InterviewService) CreateInterviewDraft(ctx context.Context, req *Create
 	resp := &CreateInterviewDraftResponse{}
 	if protoResp.ExpiresAt != nil {
 		resp.ExpiresAt = protoResp.ExpiresAt.AsTime()
+	}
+
+	return resp, nil
+}
+
+func (s *InterviewService) GetInterviewDraft(ctx context.Context) (*GetInterviewDraftResponse, error) {
+	ctx = addAuthTokenToContext(ctx)
+
+	protoResp, err := s.interviewClient.GetInterviewDraft(ctx, &interviewpb.GetInterviewDraftRequest{})
+	if err != nil {
+		return nil, err
+	}
+
+	if protoResp == nil {
+		return nil, errors.Internal.New("received nil response from interview service")
+	}
+
+	if protoResp.Error != nil {
+		return nil, errors.ProtoErrorToAppError(protoResp.Error)
+	}
+
+	resp := &GetInterviewDraftResponse{
+		Found: protoResp.Found,
+		Draft: mapDraftToResponse(protoResp),
+	}
+	if protoResp.UpdatedAt != nil {
+		resp.UpdatedAt = protoResp.UpdatedAt.AsTime()
 	}
 
 	return resp, nil

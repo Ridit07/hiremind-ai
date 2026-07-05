@@ -68,3 +68,25 @@ func (h *InterviewHTTPHandlers) CreateInterviewDraft(w http.ResponseWriter, r *h
 
 	commonhttp.RespondWithJSON(w, http.StatusOK, resp)
 }
+
+func (h *InterviewHTTPHandlers) GetInterviewDraft(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	userID, ok := ctx.Value("user_id").(string)
+	if !ok || userID == "" {
+		commonhttp.RespondWithError(w, http.StatusUnauthorized, "user_id not found in context")
+		return
+	}
+
+	resp, err := h.service.GetInterviewDraft(ctx)
+	if err != nil {
+		if appErr, ok := errors.IsAppError(err); ok {
+			commonhttp.RespondWithError(w, appErr.Code, appErr.Message)
+			return
+		}
+		commonhttp.RespondWithError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	commonhttp.RespondWithJSON(w, http.StatusOK, resp)
+}

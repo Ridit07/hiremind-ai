@@ -111,7 +111,6 @@ func mapInterviewDraftToProto(draft *interviewService.InterviewDraft) *pb.Create
 		Language:      mapServiceLanguageToProto(draft.Language),
 
 		CandidateEmail:       draft.CandidateEmail,
-		CandidatePassword:    draft.CandidatePassword,
 		CandidatePhoneNumber: draft.CandidatePhoneNumber,
 	}
 
