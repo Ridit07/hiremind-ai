@@ -118,3 +118,26 @@ func (s *Service) CreateInterviewDraft(ctx context.Context, req CreateInterviewD
 		ExpiresAt: now.Add(draftTTL),
 	}, nil
 }
+
+func (s *Service) GetInterviewDraft(ctx context.Context) (GetInterviewDraftResponse, error) {
+
+	hrID, err := validateGetInterviewDraftRequest(ctx)
+	if err != nil {
+		return GetInterviewDraftResponse{}, err
+	}
+
+	draft, found, err := s.getDraftForCreateInterviewDraft(ctx, hrID)
+	if err != nil {
+		return GetInterviewDraftResponse{}, err
+	}
+
+	if !found {
+		return GetInterviewDraftResponse{Found: false}, nil
+	}
+
+	return GetInterviewDraftResponse{
+		Draft:     draft,
+		Found:     true,
+		UpdatedAt: draft.UpdatedAt,
+	}, nil
+}

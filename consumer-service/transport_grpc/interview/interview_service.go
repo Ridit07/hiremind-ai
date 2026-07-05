@@ -56,3 +56,29 @@ func (s *InterviewServer) CreateInterviewDraft(
 		ExpiresAt: timestamppb.New(resp.ExpiresAt),
 	}, nil
 }
+
+func (s *InterviewServer) GetInterviewDraft(
+	ctx context.Context,
+	req *pb.GetInterviewDraftRequest,
+) (*pb.GetInterviewDraftResponse, error) {
+
+	resp, err := s.Service.GetInterviewDraft(ctx)
+
+	if err != nil {
+		return &pb.GetInterviewDraftResponse{
+			Error: errormapper.ToProtoError(err),
+		}, nil
+	}
+
+	if !resp.Found {
+		return &pb.GetInterviewDraftResponse{
+			Found: false,
+		}, nil
+	}
+
+	return &pb.GetInterviewDraftResponse{
+		Draft:     mapInterviewDraftToProto(&resp.Draft),
+		Found:     true,
+		UpdatedAt: timestamppb.New(resp.UpdatedAt),
+	}, nil
+}

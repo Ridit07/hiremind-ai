@@ -91,6 +91,93 @@ func mapCreateInterviewDraftRequestToService(req *pb.CreateInterviewDraftRequest
 	return out
 }
 
+func mapInterviewDraftToProto(draft *interviewService.InterviewDraft) *pb.CreateInterviewDraftRequest {
+
+	if draft == nil {
+		return nil
+	}
+
+	out := &pb.CreateInterviewDraftRequest{
+		Role:    mapServiceRoleToProto(draft.Role),
+		Company: draft.Company,
+		Level:   mapServiceLevelToProto(draft.Level),
+		Type:    mapServiceTypeToProto(draft.Type),
+		Skills:  draft.Skills,
+
+		CodingEnabled: draft.CodingEnabled,
+		NumQuestions:  draft.NumQuestions,
+		Difficulty:    draft.Difficulty,
+		Topics:        draft.Topics,
+		Language:      mapServiceLanguageToProto(draft.Language),
+
+		CandidateEmail:       draft.CandidateEmail,
+		CandidatePassword:    draft.CandidatePassword,
+		CandidatePhoneNumber: draft.CandidatePhoneNumber,
+	}
+
+	if draft.InterviewDatetime != nil {
+		out.InterviewDatetime = timestamppb.New(*draft.InterviewDatetime)
+	}
+
+	return out
+}
+
+func mapServiceRoleToProto(role interviewService.Role) pb.Role {
+	switch role {
+	case interviewService.RoleBackendEngineer:
+		return pb.Role_ROLE_BACKEND_ENGINEER
+	case interviewService.RoleFrontendEngineer:
+		return pb.Role_ROLE_FRONTEND_ENGINEER
+	case interviewService.RoleFullStackEngineer:
+		return pb.Role_ROLE_FULL_STACK_ENGINEER
+	case interviewService.RoleDataEngineer:
+		return pb.Role_ROLE_DATA_ENGINEER
+	default:
+		return pb.Role_ROLE_UNSPECIFIED
+	}
+}
+
+func mapServiceLevelToProto(level interviewService.Level) pb.Level {
+	switch level {
+	case interviewService.LevelJunior:
+		return pb.Level_LEVEL_JUNIOR
+	case interviewService.LevelMid:
+		return pb.Level_LEVEL_MID
+	case interviewService.LevelSenior:
+		return pb.Level_LEVEL_SENIOR
+	default:
+		return pb.Level_LEVEL_UNSPECIFIED
+	}
+}
+
+func mapServiceTypeToProto(t interviewService.InterviewType) pb.InterviewType {
+	switch t {
+	case interviewService.InterviewTypeTechnical:
+		return pb.InterviewType_INTERVIEW_TYPE_TECHNICAL
+	case interviewService.InterviewTypeBehavioral:
+		return pb.InterviewType_INTERVIEW_TYPE_BEHAVIORAL
+	case interviewService.InterviewTypeSystemDesign:
+		return pb.InterviewType_INTERVIEW_TYPE_SYSTEM_DESIGN
+	default:
+		return pb.InterviewType_INTERVIEW_TYPE_UNSPECIFIED
+	}
+}
+
+func mapServiceLanguageToProto(l interviewService.Language) pb.Language {
+	switch l {
+	case interviewService.LanguagePython:
+		return pb.Language_LANGUAGE_PYTHON
+	case interviewService.LanguageJava:
+		return pb.Language_LANGUAGE_JAVA
+	case interviewService.LanguageCPP:
+		return pb.Language_LANGUAGE_CPP
+	case interviewService.LanguageJavaScript:
+		return pb.Language_LANGUAGE_JAVASCRIPT
+	default:
+		return pb.Language_LANGUAGE_UNSPECIFIED
+	}
+}
+
 func mapProtoTypeToService(t pb.InterviewType) interviewService.InterviewType {
 	switch t {
 	case pb.InterviewType_INTERVIEW_TYPE_TECHNICAL:
